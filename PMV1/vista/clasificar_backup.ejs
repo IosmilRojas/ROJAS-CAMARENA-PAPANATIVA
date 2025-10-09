@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= titulo %></title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/clasificar.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <%- include('partials/navbar') %>
+    
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>
+                        <i class="fas fa-camera text-success me-2"></i>
+                        Clasificar Variedad de Papa
+                    </h2>
+                    
+                    <!-- Model Status Badge -->
+                    <div class="model-status">
+                        <span class="badge <%= infoModelo.cargado ? 'bg-success' : 'bg-danger' %> fs-6">
+                            <i class="fas fa-brain me-1"></i>
+                            Modelo IA: <%= infoModelo.cargado ? 'Disponible' : 'No Disponible' %>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Error/Success Messages -->
+        <% if (error) { %>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <%= error %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <% } %>
+        
+        <div class="row">
+            <!-- Upload Section -->
+            <div class="col-lg-6 mb-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">
+                            <i class="fas fa-upload me-2 text-primary"></i>
+                            Subir Imagen
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="clasificacionForm" enctype="multipart/form-data">
+                            <div class="mb-4">
+                                <label for="imagen" class="form-label">
+                                    Seleccionar imagen de papa:
+                                </label>
+                                
+                                <!-- Custom file input with drag and drop -->
+                                <div class="file-upload-container" 
+                                     ondrop="handleDrop(event)" 
+                                     ondragover="handleDragOver(event)" 
+                                     ondragleave="handleDragLeave(event)">
+                                    
+                                    <input type="file" 
+                                           id="imagen" 
+                                           name="imagen" 
+                                           accept="image/*" 
+                                           required 
+                                           class="d-none"
+                                           onchange="handleFileSelect(event)">
+                                    
+                                    <div class="upload-area text-center py-5" onclick="document.getElementById('imagen').click()">
+                                        <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                        <p class="mb-2">
+                                            <strong>Haz clic aquí o arrastra una imagen</strong>
+                                        </p>
+                                        <p class="text-muted small">
+                                            Formatos soportados: JPG, PNG, WebP (máx. 10MB)
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Image Preview -->
+                            <div id="imagePreview" class="mb-4" style="display: none;">
+                                <h6>Vista previa:</h6>
+                                <img id="previewImg" class="img-thumbnail" style="max-width: 100%; max-height: 300px;">
+                                <div class="mt-2">
+                                    <small class="text-muted" id="imageInfo"></small>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" 
+                                        class="btn btn-success btn-lg" 
+                                        id="clasificarBtn"
+                                        <%= !infoModelo.cargado ? 'disabled' : '' %>>
+                                    <i class="fas fa-brain me-2"></i>
+                                    Clasificar con IA
+                                </button>
+                                
+                                <% if (!infoModelo.cargado) { %>
+                                    <small class="text-danger text-center">
+                                        <i class="fas fa-exclamation-circle me-1"></i>
+                                        El modelo IA no está disponible
+                                    </small>
+                                <% } %>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Results Section -->
+            <div class="col-lg-6 mb-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">
+                            <i class="fas fa-search me-2 text-info"></i>
+                            Resultado de Clasificación
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="resultadoContainer">
+                            <div class="text-center text-muted py-5">
+                                <i class="fas fa-seedling fa-4x opacity-25 mb-3"></i>
+                                <p class="mb-0">
+                                    Sube una imagen para ver el resultado de la clasificación
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Loading State -->
+                        <div id="loadingState" style="display: none;">
+                            <div class="text-center py-5">
+                                <div class="spinner-border text-success mb-3" role="status">
+                                    <span class="visually-hidden">Procesando...</span>
+                                </div>
+                                <p class="text-muted">
+                                    <i class="fas fa-brain me-1"></i>
+                                    Analizando imagen con IA...
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Model Information -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card bg-light border-0">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="fas fa-info-circle me-2 text-info"></i>
+                            Información del Modelo IA
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>Estado:</strong> 
+                                <span class="badge <%= infoModelo.cargado ? 'bg-success' : 'bg-danger' %>">
+                                    <%= infoModelo.cargado ? 'Activo' : 'Inactivo' %>
+                                </span>
+                            </div>
+                            
+                            <% if (infoModelo.cargado) { %>
+                            <div class="col-md-3">
+                                <strong>Variedades:</strong> 
+                                <%= infoModelo.clases ? infoModelo.clases.length : 0 %>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Dimensiones:</strong> 
+                                <%= infoModelo.inputShape ? infoModelo.inputShape.join('x') : 'N/A' %>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Capas:</strong> 
+                                <%= infoModelo.capas || 'N/A' %>
+                            </div>
+                            <% } %>
+                        </div>
+                        
+                        <% if (infoModelo.clases && infoModelo.clases.length > 0) { %>
+                        <div class="mt-3">
+                            <strong>Variedades detectables:</strong>
+                            <% infoModelo.clases.forEach(function(clase) { %>
+                                <span class="badge bg-secondary me-1"><%= clase %></span>
+                            <% }); %>
+                        </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="/js/clasificar.js"></script>
+    
+    <script>
+        // File upload handling
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+        
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                document.getElementById('imagen').files = files;
+                handleFileSelect({ target: { files: files } });
+            }
+        }
+        
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Por favor selecciona un archivo de imagen válido');
+                return;
+            }
+            
+            // Validate file size (10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                alert('El archivo es demasiado grande. Máximo 10MB permitido.');
+                return;
+            }
+            
+            // Show image preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('imagePreview');
+                const img = document.getElementById('previewImg');
+                const info = document.getElementById('imageInfo');
+                
+                img.src = e.target.result;
+                info.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // Form submission
+        document.getElementById('clasificacionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const fileInput = document.getElementById('imagen');
+            
+            if (!fileInput.files[0]) {
+                alert('Por favor selecciona una imagen');
+                return;
+            }
+            
+            formData.append('imagen', fileInput.files[0]);
+            
+            // Show loading state
+            document.getElementById('resultadoContainer').style.display = 'none';
+            document.getElementById('loadingState').style.display = 'block';
+            document.getElementById('clasificarBtn').disabled = true;
+            
+            try {
+                const response = await fetch('/clasificacion/procesar', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.exito) {
+                    mostrarResultado(result.resultado);
+                } else {
+                    mostrarError(result.error || 'Error procesando imagen');
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarError('Error de conexión. Intenta nuevamente.');
+            } finally {
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('clasificarBtn').disabled = false;
+            }
+        });
+        
+        function mostrarResultado(resultado) {
+            const html = `
+                <div class="result-success">
+                    <div class="text-center mb-4">
+                        <div class="result-icon bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                             style="width: 80px; height: 80px;">
+                            <i class="fas fa-check fa-2x"></i>
+                        </div>
+                        <h4 class="text-success">¡Clasificación Completada!</h4>
+                    </div>
+                    
+                    <div class="card border-success">
+                        <div class="card-body">
+                            <h5 class="card-title text-center">
+                                <i class="fas fa-seedling me-2 text-success"></i>
+                                ${resultado.variedad.nombre}
+                            </h5>
+                            
+                            <div class="text-center mb-3">
+                                <div class="progress mb-2" style="height: 25px;">
+                                    <div class="progress-bar bg-success" 
+                                         role="progressbar" 
+                                         style="width: ${resultado.confianzaPorcentaje}%">
+                                        ${resultado.confianzaPorcentaje}% de confianza
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row text-center">
+                                <div class="col-12">
+                                    <p class="text-muted mb-2">
+                                        <strong>Nombre científico:</strong><br>
+                                        <em>${resultado.variedad.cientifico}</em>
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            ${resultado.variedad.descripcion ? `
+                                <div class="mt-3">
+                                    <h6>Descripción:</h6>
+                                    <p class="text-muted small">${resultado.variedad.descripcion}</p>
+                                </div>
+                            ` : ''}
+                            
+                            ${resultado.alternativas && resultado.alternativas.length > 0 ? `
+                                <div class="mt-3">
+                                    <h6>Otras posibilidades:</h6>
+                                    ${resultado.alternativas.map(alt => `
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span>${alt.variedad}</span>
+                                            <span class="badge bg-secondary">${alt.porcentaje}%</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                            
+                            <div class="mt-3 text-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>
+                                    Procesado en ${resultado.tiempoProcesamiento}ms
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('resultadoContainer').innerHTML = html;
+            document.getElementById('resultadoContainer').style.display = 'block';
+        }
+        
+        function mostrarError(mensaje) {
+            const html = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Error:</strong> ${mensaje}
+                </div>
+            `;
+            
+            document.getElementById('resultadoContainer').innerHTML = html;
+            document.getElementById('resultadoContainer').style.display = 'block';
+        }
+    </script>
+    
+    <style>
+        .file-upload-container {
+            border: 2px dashed #dee2e6;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .file-upload-container:hover,
+        .file-upload-container.drag-over {
+            border-color: #198754;
+            background-color: #f8fff9;
+        }
+        
+        .upload-area {
+            background-color: #fafafa;
+            transition: all 0.3s ease;
+        }
+        
+        .result-icon {
+            animation: bounce 0.5s ease-in-out;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+    </style>
+</body>
+</html>
