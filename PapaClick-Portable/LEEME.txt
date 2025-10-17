@@ -1,0 +1,21 @@
+================================================================ 
+                    PAPACLICK v1.0 
+           Sistema de Clasificacion de Papa con IA 
+================================================================ 
+ 
+INSTRUCCIONES: 
+ 
+1. Haz doble clic en "INICIAR-PAPACLICK.bat" 
+2. Espera a que aparezca "Servidor ejecutandose en puerto 3000" 
+3. Abre tu navegador y ve a: http://localhost:3000 
+4. Para cerrar, presiona Ctrl+C en la ventana negra 
+ 
+REQUISITOS: 
+- Conexion a internet (para base de datos) 
+- Puerto 3000 libre 
+ 
+FUNCIONALIDADES: 
+- Clasificacion automatica de variedades de papa 
+- Inteligencia artificial integrada 
+- Sistema de usuarios y reportes 
+- Base de datos en la nube 

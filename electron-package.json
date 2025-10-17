@@ -1,0 +1,35 @@
+{
+  "name": "papaclick-electron",
+  "version": "1.0.0",
+  "description": "Sistema de Clasificación de Variedades de Papa",
+  "main": "electron-main.js",
+  "scripts": {
+    "electron": "electron .",
+    "build": "electron-builder",
+    "pack": "electron-builder --dir"
+  },
+  "build": {
+    "appId": "com.rojascamarena.papaclick",
+    "productName": "PapaClick",
+    "directories": {
+      "output": "electron-dist"
+    },
+    "files": [
+      "PMV1/**/*",
+      "electron-main.js",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "devDependencies": {
+    "electron": "^27.0.0",
+    "electron-builder": "^24.0.0"
+  }
+}

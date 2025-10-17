@@ -11,6 +11,8 @@
     "install:pmv1": "cd PMV1 && npm install",
     "config:atlas": "node PMV1/scripts/configurar-atlas.js",
     "init:data": "cd PMV1 && node scripts/inicializar-datos.js",
+    "build:exe": "pkg PMV1/app.js --targets win --out-path dist",
+    "build:all": "pkg PMV1/app.js --targets win,linux,macos --out-path dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -47,6 +49,16 @@
   "engines": {
     "node": ">=16.0.0",
     "npm": ">=8.0.0"
+  },
+  "pkg": {
+    "assets": [
+      "PMV1/public/**/*",
+      "PMV1/vista/**/*",
+      "PMV1/web_model/**/*",
+      "PMV1/uploads/**/*"
+    ],
+    "targets": [ "node16-win-x64" ],
+    "outputPath": "dist"
   },
   "repository": {
     "type": "git",
