@@ -60,11 +60,11 @@ app.locals.upload = multer({ storage: storage });
 // Middleware de logging para debug
 app.use((req, res, next) => {
     if (req.path.includes('/clasificacion/procesar')) {
-        console.log(`\n🌐 PETICIÓN RECIBIDA: ${req.method} ${req.path}`);
-        console.log(`📅 Timestamp: ${new Date().toISOString()}`);
-        console.log(`👤 Usuario en sesión: ${req.session.usuario ? req.session.usuario.nombre : 'NO LOGUEADO'}`);
-        console.log(`📁 Archivos adjuntos: ${req.files ? Object.keys(req.files).length : 0}`);
-        console.log(`📝 Body size: ${JSON.stringify(req.body).length} chars`);
+        console.log(`\nPETICIÓN RECIBIDA: ${req.method} ${req.path}`);
+        console.log(`Timestamp: ${new Date().toISOString()}`);
+        console.log(`Usuario en sesión: ${req.session.usuario ? req.session.usuario.nombre : 'NO LOGUEADO'}`);
+        console.log(`Archivos adjuntos: ${req.files ? Object.keys(req.files).length : 0}`);
+        console.log(`Body size: ${JSON.stringify(req.body).length} chars`);
     }
     next();
 });
@@ -96,4 +96,34 @@ app.listen(PORT, () => {
     console.log(`🌐 Accede a: http://localhost:${PORT}`);
 });
 
+// Evitar hacer app.listen cuando se requiera como módulo (Vercel)
+if (require.main === module) {
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+}
+
 module.exports = app;
+
+// Helper para conectar a MongoDB reutilizando la conexión entre invocaciones (serverless-friendly)
+const mongoose = require('mongoose');
+
+const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGODB_LOCAL || 'mongodb://localhost:27017/PapasDB';
+
+async function connectToMongo() {
+    if (!MONGODB_URI) throw new Error('MONGODB_URI no definido en variables de entorno');
+    // Reutilizar conexión si ya está abierta
+    if (mongoose.connection.readyState === 1) {
+        return mongoose;
+    }
+    // Opciones recomendadas
+    const opts = {
+        serverSelectionTimeoutMS: 15000,
+        socketTimeoutMS: 45000,
+        maxPoolSize: 10,
+        // useNewUrlParser/useUnifiedTopology no son necesarios en mongoose 6+
+    };
+    await mongoose.connect(MONGODB_URI, opts);
+    return mongoose;
+}
+
+module.exports = { connectToMongo };

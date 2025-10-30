@@ -46,13 +46,13 @@ class ClasificacionController {
         let rutaImagenTemporal = null;
         
         try {
-            console.log('🚀 INICIANDO PROCESAMIENTO DE CLASIFICACIÓN');
+            console.log('INICIANDO PROCESAMIENTO DE CLASIFICACIÓN');
             console.log(`   Usuario logueado: ${req.session.usuario ? 'SÍ' : 'NO'}`);
             console.log(`   Archivo recibido: ${req.file ? 'SÍ' : 'NO'}`);
             
             // Verificar autenticación
             if (!req.session.usuario) {
-                console.log('❌ ERROR: Usuario no autenticado');
+                console.log('ERROR: Usuario no autenticado');
                 return res.status(401).json({ error: 'No autenticado' });
             }
             
@@ -61,7 +61,7 @@ class ClasificacionController {
             
             // Verificar que se subió un archivo
             if (!req.file) {
-                console.log('❌ ERROR: No se proporcionó imagen');
+                console.log('ERROR: No se proporcionó imagen');
                 return res.status(400).json({ error: 'No se proporcionó imagen' });
             }
             
