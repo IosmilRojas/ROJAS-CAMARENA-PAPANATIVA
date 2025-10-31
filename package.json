@@ -2,7 +2,7 @@
   "name": "rojas-camarena-papaclick",
   "version": "1.0.0",
   "description": "Sistema de clasificación de variedades de papa usando IA - Arquitectura 4 capas",
-  "main": "server.js",
+  "main": "electron-main.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
@@ -11,9 +11,12 @@
     "install:pmv1": "cd PMV1 && npm install",
     "config:atlas": "node PMV1/scripts/configurar-atlas.js",
     "init:data": "cd PMV1 && node scripts/inicializar-datos.js",
-    "build:exe": "pkg PMV1/app.js --targets win --out-path dist",
-    "build:all": "pkg PMV1/app.js --targets win,linux,macos --out-path dist",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build:exe": "pkg PMV1/app.js --targets node18-win-x64 --out-path dist",
+    "build:all": "pkg PMV1/app.js --targets node18-win-x64,linux-x64,macos-x64 --out-path dist",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "electron:dev": "cross-env PORT=34567 electron .",
+    "build:electron": "electron-builder --win --x64",
+    "postinstall": "electron-builder install-app-deps"
   },
   "keywords": [
     "nodejs",
@@ -41,10 +44,14 @@
     "mongodb": "^6.20.0",
     "mongoose": "^8.0.0",
     "multer": "^1.4.5-lts.1",
-    "sharp": "^0.32.6",
-    "serverless-http": "^3.0.0"
+    "serverless-http": "^3.0.0",
+    "sharp": "^0.32.6"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
+    "electron": "^26.6.10",
+    "electron-builder": "^24.13.3",
+    "electron-rebuild": "^3.2.9",
     "nodemon": "^3.0.1"
   },
   "engines": {
@@ -58,7 +65,9 @@
       "PMV1/web_model/**/*",
       "PMV1/uploads/**/*"
     ],
-    "targets": [ "node16-win-x64" ],
+    "targets": [
+      "node18-win-x64"
+    ],
     "outputPath": "dist"
   },
   "repository": {
@@ -68,5 +77,17 @@
   "bugs": {
     "url": "https://github.com/IosmilRojas/ROJAS-CAMARENA-PAPANATIVA/issues"
   },
-  "homepage": "https://github.com/IosmilRojas/ROJAS-CAMARENA-PAPANATIVA#readme"
+  "homepage": "https://github.com/IosmilRojas/ROJAS-CAMARENA-PAPANATIVA#readme",
+  "build": {
+    "appId": "com.rojascamarena.papaclick",
+    "files": [
+      "PMV1/**/*",
+      "electron-main.js",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "artifactName": "${productName}-Setup-${version}.exe"
+    }
+  }
 }
