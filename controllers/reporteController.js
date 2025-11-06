@@ -375,6 +375,7 @@ class ReporteController {
                     idClasificacion: cls._id,
                     fecha: moment(cls.fechaClasificacion).format('DD/MM/YYYY HH:mm:ss'),
                     usuario: cls.idUsuario ? cls.idUsuario.nombre : 'Usuario no encontrado',
+                    rol: cls.idUsuario ? cls.idUsuario.rol : 'N/A',
                     correoUsuario: cls.idUsuario ? cls.idUsuario.correo : 'N/A',
                     variedad: cls.idVariedad ? cls.idVariedad.nombreComun : 'Variedad no encontrada',
                     nombreCientifico: cls.idVariedad ? cls.idVariedad.nombreCientifico : 'N/A',
@@ -439,14 +440,52 @@ class ReporteController {
                 { metrica: 'Papas No Aptas', valor: noAptos }
             ]);
             
+            // Formatear encabezados del resumen
+            hojaSummary.getRow(1).fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FF2F5496' }
+            };
+            hojaSummary.getRow(1).font = {
+                bold: true,
+                color: { argb: 'FFFFFFFF' },
+                size: 11
+            };
+            hojaSummary.getRow(1).alignment = { horizontal: 'center', vertical: 'center' };
+            
             // Aplicar estilos al resumen
-            hojaSummary.eachRow((row) => {
+            hojaSummary.eachRow((row, rowNumber) => {
                 row.eachCell((cell) => {
-                    cell.fill = {
-                        type: 'pattern',
-                        pattern: 'solid',
-                        fgColor: { argb: 'FFE0E0E0' }
+                    // Bordes
+                    cell.border = {
+                        top: { style: 'thin', color: { argb: 'FFC0C0C0' } },
+                        left: { style: 'thin', color: { argb: 'FFC0C0C0' } },
+                        bottom: { style: 'thin', color: { argb: 'FFC0C0C0' } },
+                        right: { style: 'thin', color: { argb: 'FFC0C0C0' } }
                     };
+                    
+                    if (rowNumber > 1) {
+                        // Alternar colores de fila
+                        if (rowNumber % 2 === 0) {
+                            cell.fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: 'FFF2F2F2' }
+                            };
+                        } else {
+                            cell.fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: 'FFFFFFFF' }
+                            };
+                        }
+                    }
+                    
+                    // Alineación
+                    cell.alignment = { horizontal: 'left', vertical: 'center' };
+                    if (cell.value && typeof cell.value === 'number') {
+                        cell.alignment = { horizontal: 'right', vertical: 'center' };
+                    }
                 });
             });
             
@@ -455,11 +494,11 @@ class ReporteController {
             hojaDetalle.columns = [
                 { header: 'Fecha', key: 'fecha', width: 18 },
                 { header: 'Usuario', key: 'usuario', width: 15 },
-                { header: 'Variedad', key: 'variedad', width: 15 },
-                { header: 'Confianza (%)', key: 'confianzaNumero', width: 12 },
+                { header: 'Rol', key: 'rol', width: 14 },
+                { header: 'Variedad', key: 'variedad', width: 14 },
+                { header: 'Confianza (%)', key: 'confianzaNumero', width: 14 },
                 { header: 'Condición', key: 'condicion', width: 12 },
                 { header: 'Estado', key: 'estado', width: 12 },
-                { header: 'Imagen', key: 'imagen', width: 20 },
                 { header: 'Tiempo (ms)', key: 'tiempoProcesamiento', width: 12 }
             ];
             
@@ -472,28 +511,59 @@ class ReporteController {
             
             hojaDetalle.addRows(datosParaExcel);
             
-            // Formatear encabezados
+            // Formatear encabezados con colores atractivos
             hojaDetalle.views = [{ state: 'frozen', ySplit: 1 }];
             hojaDetalle.getRow(1).fill = {
                 type: 'pattern',
                 pattern: 'solid',
-                fgColor: { argb: 'FF4472C4' }
+                fgColor: { argb: 'FF2F5496' }
             };
             hojaDetalle.getRow(1).font = {
                 bold: true,
-                color: { argb: 'FFFFFFFF' }
+                color: { argb: 'FFFFFFFF' },
+                size: 11
             };
+            hojaDetalle.getRow(1).alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
             
             // Formatear columnas de números
             hojaDetalle.getColumn('confianzaNumero').numFmt = '0.00';
             hojaDetalle.getColumn('tiempoProcesamiento').numFmt = '0';
             
-            // Aplicar alineación a datos
+            // Aplicar alineación y bordes a datos
             hojaDetalle.eachRow((row, rowNumber) => {
-                if (rowNumber > 1) {
-                    row.getCell('confianzaNumero').alignment = { horizontal: 'right' };
-                    row.getCell('tiempoProcesamiento').alignment = { horizontal: 'right' };
-                }
+                row.eachCell((cell) => {
+                    // Bordes
+                    cell.border = {
+                        top: { style: 'thin', color: { argb: 'FFC0C0C0' } },
+                        left: { style: 'thin', color: { argb: 'FFC0C0C0' } },
+                        bottom: { style: 'thin', color: { argb: 'FFC0C0C0' } },
+                        right: { style: 'thin', color: { argb: 'FFC0C0C0' } }
+                    };
+                    
+                    // Centrar contenido
+                    cell.alignment = { horizontal: 'left', vertical: 'center', wrapText: true };
+                    
+                    if (rowNumber > 1) {
+                        // Alternar colores de fila
+                        if (rowNumber % 2 === 0) {
+                            cell.fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: 'FFF2F2F2' }
+                            };
+                        }
+                        
+                        // Alinear números a la derecha
+                        if (cell.value && (typeof cell.value === 'number')) {
+                            cell.alignment = { horizontal: 'right', vertical: 'center' };
+                        }
+                    }
+                });
+            });
+            
+            // Ancho automático para columnas
+            hojaDetalle.columns.forEach(col => {
+                col.width = col.width || 15;
             });
             
             // Configurar respuesta
@@ -578,33 +648,36 @@ class ReporteController {
             // Encabezados de tabla
             const tableTop = doc.y;
             const colWidths = {
-                fecha: 70,
-                usuario: 70,
-                variedad: 70,
-                confianza: 60,
-                condicion: 60,
-                estado: 60
+                fecha: 65,
+                usuario: 60,
+                rol: 55,
+                variedad: 60,
+                confianza: 55,
+                condicion: 55,
+                estado: 50
             };
             
             const columns = {
                 fecha: 50,
-                usuario: 50 + colWidths.fecha + 5,
-                variedad: 50 + colWidths.fecha + colWidths.usuario + 10,
-                confianza: 50 + colWidths.fecha + colWidths.usuario + colWidths.variedad + 15,
-                condicion: 50 + colWidths.fecha + colWidths.usuario + colWidths.variedad + colWidths.confianza + 20,
-                estado: 50 + colWidths.fecha + colWidths.usuario + colWidths.variedad + colWidths.confianza + colWidths.condicion + 25
+                usuario: 50 + colWidths.fecha + 3,
+                rol: 50 + colWidths.fecha + colWidths.usuario + 6,
+                variedad: 50 + colWidths.fecha + colWidths.usuario + colWidths.rol + 9,
+                confianza: 50 + colWidths.fecha + colWidths.usuario + colWidths.rol + colWidths.variedad + 12,
+                condicion: 50 + colWidths.fecha + colWidths.usuario + colWidths.rol + colWidths.variedad + colWidths.confianza + 15,
+                estado: 50 + colWidths.fecha + colWidths.usuario + colWidths.rol + colWidths.variedad + colWidths.confianza + colWidths.condicion + 18
             };
             
-            // Fondo gris para encabezado
-            doc.rect(45, tableTop, 510, 20).fill('#f0f0f0');
+            // Fondo azul oscuro para encabezado
+            doc.rect(45, tableTop, 510, 20).fill('#2F5496');
             
-            doc.fontSize(9).font('Helvetica-Bold').fillColor('#000000');
-            doc.text('Fecha', columns.fecha, tableTop + 4, { width: colWidths.fecha });
-            doc.text('Usuario', columns.usuario, tableTop + 4, { width: colWidths.usuario });
-            doc.text('Variedad', columns.variedad, tableTop + 4, { width: colWidths.variedad });
-            doc.text('Confianza', columns.confianza, tableTop + 4, { width: colWidths.confianza });
-            doc.text('Condición', columns.condicion, tableTop + 4, { width: colWidths.condicion });
-            doc.text('Estado', columns.estado, tableTop + 4, { width: colWidths.estado });
+            doc.fontSize(8).font('Helvetica-Bold').fillColor('#FFFFFF');
+            doc.text('Fecha', columns.fecha, tableTop + 5, { width: colWidths.fecha });
+            doc.text('Usuario', columns.usuario, tableTop + 5, { width: colWidths.usuario });
+            doc.text('Rol', columns.rol, tableTop + 5, { width: colWidths.rol });
+            doc.text('Variedad', columns.variedad, tableTop + 5, { width: colWidths.variedad });
+            doc.text('Confianza', columns.confianza, tableTop + 5, { width: colWidths.confianza });
+            doc.text('Condición', columns.condicion, tableTop + 5, { width: colWidths.condicion });
+            doc.text('Estado', columns.estado, tableTop + 5, { width: colWidths.estado });
             
             // Línea separadora bajo encabezado
             doc.moveTo(45, tableTop + 20).lineTo(555, tableTop + 20).stroke();
@@ -620,14 +693,15 @@ class ReporteController {
                     
                     // Repetir encabezado en nueva página
                     const newTableTop = 50;
-                    doc.rect(45, newTableTop, 510, 20).fill('#f0f0f0');
-                    doc.fontSize(9).font('Helvetica-Bold').fillColor('#000000');
-                    doc.text('Fecha', columns.fecha, newTableTop + 4, { width: colWidths.fecha });
-                    doc.text('Usuario', columns.usuario, newTableTop + 4, { width: colWidths.usuario });
-                    doc.text('Variedad', columns.variedad, newTableTop + 4, { width: colWidths.variedad });
-                    doc.text('Confianza', columns.confianza, newTableTop + 4, { width: colWidths.confianza });
-                    doc.text('Condición', columns.condicion, newTableTop + 4, { width: colWidths.condicion });
-                    doc.text('Estado', columns.estado, newTableTop + 4, { width: colWidths.estado });
+                    doc.rect(45, newTableTop, 510, 20).fill('#2F5496');
+                    doc.fontSize(8).font('Helvetica-Bold').fillColor('#FFFFFF');
+                    doc.text('Fecha', columns.fecha, newTableTop + 5, { width: colWidths.fecha });
+                    doc.text('Usuario', columns.usuario, newTableTop + 5, { width: colWidths.usuario });
+                    doc.text('Rol', columns.rol, newTableTop + 5, { width: colWidths.rol });
+                    doc.text('Variedad', columns.variedad, newTableTop + 5, { width: colWidths.variedad });
+                    doc.text('Confianza', columns.confianza, newTableTop + 5, { width: colWidths.confianza });
+                    doc.text('Condición', columns.condicion, newTableTop + 5, { width: colWidths.condicion });
+                    doc.text('Estado', columns.estado, newTableTop + 5, { width: colWidths.estado });
                     doc.moveTo(45, newTableTop + 20).lineTo(555, newTableTop + 20).stroke();
                     
                     y = newTableTop + 25;
@@ -643,6 +717,7 @@ class ReporteController {
                 doc.fontSize(8).font('Helvetica').fillColor('#000000');
                 doc.text((clasificacion.fecha || '').substring(0, 15), columns.fecha, y, { width: colWidths.fecha });
                 doc.text((clasificacion.usuario || '').substring(0, 12), columns.usuario, y, { width: colWidths.usuario });
+                doc.text((clasificacion.rol || '').substring(0, 10), columns.rol, y, { width: colWidths.rol });
                 doc.text((clasificacion.variedad || '').substring(0, 12), columns.variedad, y, { width: colWidths.variedad });
                 doc.text(clasificacion.confianza || '', columns.confianza, y, { width: colWidths.confianza });
                 doc.text((clasificacion.condicion || '').substring(0, 12), columns.condicion, y, { width: colWidths.condicion });
