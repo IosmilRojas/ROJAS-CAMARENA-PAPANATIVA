@@ -141,11 +141,21 @@ if (require.main === module) {
 
         // Inicio del servidor
         const PORT = process.env.PORT || 3000;
-        app.listen(PORT, () => {
+        const server = app.listen(PORT, () => {
             console.log('🌐 Servidor Web:');
             console.log(`   └─ URL: http://localhost:${PORT}`);
             console.log(`   └─ Modo: ${process.env.NODE_ENV || 'development'}`);
             console.log('   └─ Estado: ✅ En línea\n');
+        });
+
+        // Manejo de errores de puerto en uso
+        server.on('error', (err) => {
+            if (err.code === 'EADDRINUSE') {
+                console.error(`Puerto ${PORT} está en uso. Intentando puerto ${PORT + 1}...`);
+                server.listen(PORT + 1);
+            } else {
+                throw err;
+            }
         });
     })();
 }

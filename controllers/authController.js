@@ -67,10 +67,16 @@ class AuthController {
             // Crear sesión
             req.session.usuario = {
                 id: usuario._id,
+                idUsuario: usuario.idUsuario,
                 nombre: usuario.nombre,
+                apellido: usuario.apellido || null,
                 correo: usuario.correo,
                 rol: usuario.rol,
-                avatarUrl: usuario.avatarUrl || null
+                avatarUrl: usuario.avatarUrl || null,
+                telefono: usuario.telefono || null,
+                dni: usuario.dni || null,
+                genero: usuario.genero || 'no-especifica',
+                fechaNacimiento: usuario.fechaNacimiento || null
             };
             
             console.log(`Usuario autenticado: ${usuario.correo}`);

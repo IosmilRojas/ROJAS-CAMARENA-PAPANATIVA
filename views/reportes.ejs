@@ -31,7 +31,7 @@
                     </h2>
                     
                     <div class="btn-group">
-                        <button type="button" class="btn btn-success" onclick="exportarReporte()">
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exportModal">
                             <i class="fas fa-download me-1"></i>
                             Exportar
                         </button>
@@ -337,6 +337,36 @@
         </div>
     </div>
     
+    <!-- Modal de Exportación -->
+    <div class="modal fade" id="exportModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-file-export me-2"></i>
+                        Seleccionar Formato de Exportación
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-4">Elige el formato en el que deseas exportar las clasificaciones:</p>
+                    <div class="d-grid gap-3">
+                        <button type="button" class="btn btn-lg btn-outline-primary" onclick="exportarReporte('excel')">
+                            <i class="fas fa-file-excel me-2"></i>
+                            <strong>Exportar a Excel</strong>
+                            <div class="small text-muted mt-1">Formato .xlsx</div>
+                        </button>
+                        <button type="button" class="btn btn-lg btn-outline-danger" onclick="exportarReporte('pdf')">
+                            <i class="fas fa-file-pdf me-2"></i>
+                            <strong>Exportar a PDF</strong>
+                            <div class="small text-muted mt-1">Formato .pdf</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Trazabilidad Modal -->
     <div class="modal fade" id="trazabilidadModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
@@ -385,15 +415,19 @@
             location.reload();
         }
         
-        async function exportarReporte() {
+        async function exportarReporte(formato) {
             try {
+                // Cerrar modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('exportModal'));
+                if (modal) modal.hide();
+                
                 // Crear URL con parámetros de filtro
                 const params = new URLSearchParams(window.location.search);
-                params.set('formato', 'json');
+                params.set('formato', formato);
                 
                 const url = `/reportes/api/exportar?${params.toString()}`;
                 
-                console.log('Exportando desde URL:', url);
+                console.log(`Exportando en formato ${formato} desde URL:`, url);
                 
                 const response = await fetch(url);
                 
@@ -416,7 +450,10 @@
                 // Generar nombre de archivo con timestamp
                 const fecha = new Date();
                 const timestamp = fecha.toISOString().slice(0, 19).replace(/:/g, '-');
-                a.download = `clasificaciones_${timestamp}.json`;
+                
+                // Determinar extensión según formato
+                const extension = formato === 'pdf' ? 'pdf' : 'xlsx';
+                a.download = `clasificaciones_${timestamp}.${extension}`;
                 
                 // Descargar
                 document.body.appendChild(a);
@@ -427,8 +464,8 @@
                 document.body.removeChild(a);
                 
                 // Mensaje de éxito
-                console.log('✅ Archivo descargado:', a.download);
-                alert('✅ Exportación completada. Archivo descargado.');
+                console.log(`✅ Archivo descargado: ${a.download}`);
+                alert(`✅ Exportación a ${formato.toUpperCase()} completada. Archivo descargado.`);
                 
             } catch (error) {
                 console.error('❌ Error exportando reporte:', error);
@@ -489,8 +526,14 @@
             new bootstrap.Modal(document.getElementById('trazabilidadModal')).show();
         }
         
-        <% if (usuario.rol === 'administrador') { %>
         async function validarClasificacion(idClasificacion) {
+            const isAdmin = '<%= usuario.rol === "administrador" %>' === 'true';
+            
+            if (!isAdmin) {
+                alert('No tienes permisos para validar clasificaciones');
+                return;
+            }
+            
             const observaciones = prompt('Observaciones de validación (opcional):');
             
             if (observaciones === null) return; // Cancelado
@@ -517,7 +560,6 @@
                 alert('Error de conexión');
             }
         }
-        <% } %>
     </script>
     
     <style>
