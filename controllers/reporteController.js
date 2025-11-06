@@ -604,7 +604,7 @@ class ReporteController {
             doc.fontSize(18).font('Helvetica-Bold').text('Reporte de Clasificaciones de Papas', { align: 'center' });
             doc.moveDown(0.3);
             doc.fontSize(10).font('Helvetica').text(`Generado: ${moment().format('DD/MM/YYYY HH:mm:ss')}`, { align: 'center' });
-            doc.text(`Usuario: ${usuario.nombre}`, { align: 'center' });
+            doc.text(`Usuario: ${usuario.nombre} (${usuario.rol})`, { align: 'center' });
             doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
             doc.moveDown(0.5);
             
