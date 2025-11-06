@@ -418,14 +418,21 @@ class ReporteController {
                 { header: 'Valor', key: 'valor', width: 20 }
             ];
             
+            // Calcular condiciones desde los datos
+            let aptos = 0, noAptos = 0;
+            datosReporte.forEach(d => {
+                if (d.condicion === 'apto') aptos++;
+                else noAptos++;
+            });
+            
             hojaSummary.addRows([
                 { metrica: 'Total Clasificaciones', valor: estadisticas.general.totalClasificaciones },
                 { metrica: 'Confianza Promedio', valor: (estadisticas.general.confianzaPromedio * 100).toFixed(2) + '%' },
-                { metrica: 'Alta Confianza (≥80%)', valor: estadisticas.distribucionConfianza.alta },
-                { metrica: 'Confianza Media (50-80%)', valor: estadisticas.distribucionConfianza.media },
-                { metrica: 'Baja Confianza (<50%)', valor: estadisticas.distribucionConfianza.baja },
-                { metrica: 'Papas Aptas', valor: estadisticas.condiciones.apto },
-                { metrica: 'Papas No Aptas', valor: estadisticas.condiciones.noApto }
+                { metrica: 'Alta Confianza (≥80%)', valor: estadisticas.distribucionConfianza.alta || 0 },
+                { metrica: 'Confianza Media (50-80%)', valor: estadisticas.distribucionConfianza.media || 0 },
+                { metrica: 'Baja Confianza (<50%)', valor: estadisticas.distribucionConfianza.baja || 0 },
+                { metrica: 'Papas Aptas', valor: aptos },
+                { metrica: 'Papas No Aptas', valor: noAptos }
             ]);
             
             // Aplicar estilos al resumen
@@ -470,13 +477,17 @@ class ReporteController {
             const filename = `clasificaciones_${timestamp}.xlsx`;
             res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
             
             await workbook.xlsx.write(res);
+            res.end();
             console.log(`  📥 Archivo Excel generado: ${filename}`);
             
         } catch (error) {
             console.error('Error generando Excel:', error);
-            throw error;
+            if (!res.headersSent) {
+                res.status(500).json({ error: 'Error generando Excel: ' + error.message });
+            }
         }
     }
 
@@ -485,12 +496,14 @@ class ReporteController {
         try {
             const doc = new PDFDocument({
                 bufferPages: true,
-                margin: 40
+                margin: 40,
+                size: 'A4'
             });
             
             const filename = `clasificaciones_${timestamp}.pdf`;
             res.setHeader('Content-Type', 'application/pdf');
             res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
             
             doc.pipe(res);
             
@@ -505,8 +518,16 @@ class ReporteController {
             doc.fontSize(10).font('Helvetica');
             doc.text(`Total de Clasificaciones: ${estadisticas.general.totalClasificaciones}`);
             doc.text(`Confianza Promedio: ${(estadisticas.general.confianzaPromedio * 100).toFixed(2)}%`);
-            doc.text(`Papas Aptas: ${estadisticas.condiciones.apto}`);
-            doc.text(`Papas No Aptas: ${estadisticas.condiciones.noApto}`);
+            
+            // Calcular condiciones desde los datos
+            let aptos = 0, noAptos = 0;
+            datosReporte.forEach(d => {
+                if (d.condicion === 'apto') aptos++;
+                else noAptos++;
+            });
+            
+            doc.text(`Papas Aptas: ${aptos}`);
+            doc.text(`Papas No Aptas: ${noAptos}`);
             doc.moveDown(0.5);
             
             // Tabla de detalles
@@ -543,12 +564,12 @@ class ReporteController {
                     y = 50;
                 }
                 
-                doc.text(clasificacion.fecha, col1, y);
-                doc.text(clasificacion.usuario.substring(0, 15), col2, y);
-                doc.text(clasificacion.variedad.substring(0, 12), col3, y);
-                doc.text(clasificacion.confianza, col4, y);
-                doc.text(clasificacion.condicion, col5, y);
-                doc.text(clasificacion.estado, col6, y);
+                doc.text(clasificacion.fecha || '', col1, y);
+                doc.text((clasificacion.usuario || '').substring(0, 15), col2, y);
+                doc.text((clasificacion.variedad || '').substring(0, 12), col3, y);
+                doc.text(clasificacion.confianza || '', col4, y);
+                doc.text(clasificacion.condicion || '', col5, y);
+                doc.text(clasificacion.estado || '', col6, y);
                 
                 y += 15;
             });
@@ -562,7 +583,9 @@ class ReporteController {
             
         } catch (error) {
             console.error('Error generando PDF:', error);
-            throw error;
+            if (!res.headersSent) {
+                res.status(500).json({ error: 'Error generando PDF: ' + error.message });
+            }
         }
     }
 
