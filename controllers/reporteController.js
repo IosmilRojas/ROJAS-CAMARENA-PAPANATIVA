@@ -376,11 +376,13 @@ class ReporteController {
                 correoUsuario: cls.idUsuario.correo,
                 variedad: cls.idVariedad.nombreComun,
                 nombreCientifico: cls.idVariedad.nombreCientifico,
+                confianzaNumero: parseFloat((cls.confianza * 100).toFixed(2)),
                 confianza: (cls.confianza * 100).toFixed(2) + '%',
                 estado: cls.estado,
                 condicion: cls.condicion,
                 imagen: cls.idImagen.nombreOriginal,
-                tiempoProcesamiento: cls.tiempoProcesamientoMs + 'ms',
+                tiempoProcesamiento: cls.tiempoProcesamientoMs,
+                tiempoProcesamintoMs: cls.tiempoProcesamientoMs + 'ms',
                 observaciones: cls.observaciones || 'N/A'
             }));
             
@@ -436,8 +438,8 @@ class ReporteController {
             ]);
             
             // Aplicar estilos al resumen
-            hojaSummary.rows.forEach(row => {
-                row.cells.forEach(cell => {
+            hojaSummary.eachRow((row) => {
+                row.eachCell((cell) => {
                     cell.fill = {
                         type: 'pattern',
                         pattern: 'solid',
@@ -452,14 +454,21 @@ class ReporteController {
                 { header: 'Fecha', key: 'fecha', width: 18 },
                 { header: 'Usuario', key: 'usuario', width: 15 },
                 { header: 'Variedad', key: 'variedad', width: 15 },
-                { header: 'Confianza', key: 'confianza', width: 12 },
+                { header: 'Confianza (%)', key: 'confianzaNumero', width: 12 },
                 { header: 'Condición', key: 'condicion', width: 12 },
                 { header: 'Estado', key: 'estado', width: 12 },
                 { header: 'Imagen', key: 'imagen', width: 20 },
                 { header: 'Tiempo (ms)', key: 'tiempoProcesamiento', width: 12 }
             ];
             
-            hojaDetalle.addRows(datosReporte);
+            // Preparar datos para la hoja de detalle
+            const datosParaExcel = datosReporte.map(d => ({
+                ...d,
+                confianzaNumero: parseFloat(d.confianzaNumero) || 0,
+                tiempoProcesamiento: parseInt(d.tiempoProcesamiento) || 0
+            }));
+            
+            hojaDetalle.addRows(datosParaExcel);
             
             // Formatear encabezados
             hojaDetalle.views = [{ state: 'frozen', ySplit: 1 }];
@@ -472,6 +481,18 @@ class ReporteController {
                 bold: true,
                 color: { argb: 'FFFFFFFF' }
             };
+            
+            // Formatear columnas de números
+            hojaDetalle.getColumn('confianzaNumero').numFmt = '0.00';
+            hojaDetalle.getColumn('tiempoProcesamiento').numFmt = '0';
+            
+            // Aplicar alineación a datos
+            hojaDetalle.eachRow((row, rowNumber) => {
+                if (rowNumber > 1) {
+                    row.getCell('confianzaNumero').alignment = { horizontal: 'right' };
+                    row.getCell('tiempoProcesamiento').alignment = { horizontal: 'right' };
+                }
+            });
             
             // Configurar respuesta
             const filename = `clasificaciones_${timestamp}.xlsx`;
