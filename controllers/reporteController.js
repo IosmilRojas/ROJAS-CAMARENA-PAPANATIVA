@@ -519,7 +519,7 @@ class ReporteController {
         try {
             const doc = new PDFDocument({
                 bufferPages: true,
-                margin: 40,
+                margin: 50,
                 size: 'A4'
             });
             
@@ -530,17 +530,17 @@ class ReporteController {
             
             doc.pipe(res);
             
-            // Encabezado
-            doc.fontSize(20).font('Helvetica-Bold').text('Reporte de Clasificaciones de Papas', { align: 'center' });
+            // ========== ENCABEZADO ==========
+            doc.fontSize(18).font('Helvetica-Bold').text('Reporte de Clasificaciones de Papas', { align: 'center' });
+            doc.moveDown(0.3);
             doc.fontSize(10).font('Helvetica').text(`Generado: ${moment().format('DD/MM/YYYY HH:mm:ss')}`, { align: 'center' });
-            doc.fontSize(10).text(`Usuario: ${usuario.nombre}`, { align: 'center' });
+            doc.text(`Usuario: ${usuario.nombre}`, { align: 'center' });
+            doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
             doc.moveDown(0.5);
             
-            // Resumen de estadísticas
+            // ========== RESUMEN DE ESTADÍSTICAS ==========
             doc.fontSize(12).font('Helvetica-Bold').text('Resumen de Estadísticas', { underline: true });
-            doc.fontSize(10).font('Helvetica');
-            doc.text(`Total de Clasificaciones: ${estadisticas.general.totalClasificaciones}`);
-            doc.text(`Confianza Promedio: ${(estadisticas.general.confianzaPromedio * 100).toFixed(2)}%`);
+            doc.moveDown(0.2);
             
             // Calcular condiciones desde los datos
             let aptos = 0, noAptos = 0;
@@ -549,56 +549,119 @@ class ReporteController {
                 else noAptos++;
             });
             
-            doc.text(`Papas Aptas: ${aptos}`);
-            doc.text(`Papas No Aptas: ${noAptos}`);
+            // Estadísticas en dos columnas
+            const statsTop = doc.y;
+            doc.fontSize(9).font('Helvetica');
+            
+            // Columna 1
+            doc.text(`Total de Clasificaciones:`, 50);
+            doc.fontSize(10).font('Helvetica-Bold').text(estadisticas.general.totalClasificaciones, 250);
+            
+            doc.fontSize(9).font('Helvetica');
+            doc.text(`Confianza Promedio:`, 50);
+            doc.fontSize(10).font('Helvetica-Bold').text(`${(estadisticas.general.confianzaPromedio * 100).toFixed(2)}%`, 250);
+            
+            doc.fontSize(9).font('Helvetica');
+            doc.text(`Papas Aptas:`, 50);
+            doc.fontSize(10).font('Helvetica-Bold').text(aptos, 250);
+            
+            doc.fontSize(9).font('Helvetica');
+            doc.text(`Papas No Aptas:`, 50);
+            doc.fontSize(10).font('Helvetica-Bold').text(noAptos, 250);
+            
             doc.moveDown(0.5);
             
-            // Tabla de detalles
+            // ========== TABLA DE DETALLES ==========
             doc.fontSize(12).font('Helvetica-Bold').text('Detalle de Clasificaciones', { underline: true });
             doc.moveDown(0.3);
             
-            // Encabezado de tabla
+            // Encabezados de tabla
             const tableTop = doc.y;
-            const col1 = 50;
-            const col2 = 120;
-            const col3 = 200;
-            const col4 = 280;
-            const col5 = 360;
-            const col6 = 440;
+            const colWidths = {
+                fecha: 70,
+                usuario: 70,
+                variedad: 70,
+                confianza: 60,
+                condicion: 60,
+                estado: 60
+            };
             
-            doc.fontSize(9).font('Helvetica-Bold');
-            doc.text('Fecha', col1, tableTop);
-            doc.text('Usuario', col2, tableTop);
-            doc.text('Variedad', col3, tableTop);
-            doc.text('Confianza', col4, tableTop);
-            doc.text('Condición', col5, tableTop);
-            doc.text('Estado', col6, tableTop);
+            const columns = {
+                fecha: 50,
+                usuario: 50 + colWidths.fecha + 5,
+                variedad: 50 + colWidths.fecha + colWidths.usuario + 10,
+                confianza: 50 + colWidths.fecha + colWidths.usuario + colWidths.variedad + 15,
+                condicion: 50 + colWidths.fecha + colWidths.usuario + colWidths.variedad + colWidths.confianza + 20,
+                estado: 50 + colWidths.fecha + colWidths.usuario + colWidths.variedad + colWidths.confianza + colWidths.condicion + 25
+            };
             
-            // Línea separadora
-            doc.moveTo(40, tableTop + 15).lineTo(570, tableTop + 15).stroke();
+            // Fondo gris para encabezado
+            doc.rect(45, tableTop, 510, 20).fill('#f0f0f0');
+            
+            doc.fontSize(9).font('Helvetica-Bold').fillColor('#000000');
+            doc.text('Fecha', columns.fecha, tableTop + 4, { width: colWidths.fecha });
+            doc.text('Usuario', columns.usuario, tableTop + 4, { width: colWidths.usuario });
+            doc.text('Variedad', columns.variedad, tableTop + 4, { width: colWidths.variedad });
+            doc.text('Confianza', columns.confianza, tableTop + 4, { width: colWidths.confianza });
+            doc.text('Condición', columns.condicion, tableTop + 4, { width: colWidths.condicion });
+            doc.text('Estado', columns.estado, tableTop + 4, { width: colWidths.estado });
+            
+            // Línea separadora bajo encabezado
+            doc.moveTo(45, tableTop + 20).lineTo(555, tableTop + 20).stroke();
             
             // Datos de tabla
-            let y = tableTop + 20;
-            doc.font('Helvetica').fontSize(8);
+            let y = tableTop + 25;
+            doc.font('Helvetica').fontSize(8).fillColor('#000000');
             
             datosReporte.forEach((clasificacion, index) => {
-                if (y > doc.page.height - 60) {
+                // Verificar si necesita nueva página
+                if (y > doc.page.height - 80) {
                     doc.addPage();
-                    y = 50;
+                    
+                    // Repetir encabezado en nueva página
+                    const newTableTop = 50;
+                    doc.rect(45, newTableTop, 510, 20).fill('#f0f0f0');
+                    doc.fontSize(9).font('Helvetica-Bold').fillColor('#000000');
+                    doc.text('Fecha', columns.fecha, newTableTop + 4, { width: colWidths.fecha });
+                    doc.text('Usuario', columns.usuario, newTableTop + 4, { width: colWidths.usuario });
+                    doc.text('Variedad', columns.variedad, newTableTop + 4, { width: colWidths.variedad });
+                    doc.text('Confianza', columns.confianza, newTableTop + 4, { width: colWidths.confianza });
+                    doc.text('Condición', columns.condicion, newTableTop + 4, { width: colWidths.condicion });
+                    doc.text('Estado', columns.estado, newTableTop + 4, { width: colWidths.estado });
+                    doc.moveTo(45, newTableTop + 20).lineTo(555, newTableTop + 20).stroke();
+                    
+                    y = newTableTop + 25;
                 }
                 
-                doc.text(clasificacion.fecha || '', col1, y);
-                doc.text((clasificacion.usuario || '').substring(0, 15), col2, y);
-                doc.text((clasificacion.variedad || '').substring(0, 12), col3, y);
-                doc.text(clasificacion.confianza || '', col4, y);
-                doc.text(clasificacion.condicion || '', col5, y);
-                doc.text(clasificacion.estado || '', col6, y);
+                // Alternar colores de fila
+                if (index % 2 === 0) {
+                    doc.rect(45, y - 2, 510, 12).fill('#ffffff');
+                } else {
+                    doc.rect(45, y - 2, 510, 12).fill('#f9f9f9');
+                }
                 
-                y += 15;
+                doc.fontSize(8).font('Helvetica').fillColor('#000000');
+                doc.text((clasificacion.fecha || '').substring(0, 15), columns.fecha, y, { width: colWidths.fecha });
+                doc.text((clasificacion.usuario || '').substring(0, 12), columns.usuario, y, { width: colWidths.usuario });
+                doc.text((clasificacion.variedad || '').substring(0, 12), columns.variedad, y, { width: colWidths.variedad });
+                doc.text(clasificacion.confianza || '', columns.confianza, y, { width: colWidths.confianza });
+                doc.text((clasificacion.condicion || '').substring(0, 12), columns.condicion, y, { width: colWidths.condicion });
+                doc.text(clasificacion.estado || '', columns.estado, y, { width: colWidths.estado });
+                
+                y += 12;
             });
             
-            // Pie de página
-            doc.fontSize(8).text(`Total de registros: ${datosReporte.length}`, 40, doc.page.height - 30);
+            // Línea final de tabla
+            doc.moveTo(45, y).lineTo(555, y).stroke();
+            
+            doc.moveDown(0.5);
+            
+            // ========== PIE DE PÁGINA ==========
+            doc.moveTo(50, doc.page.height - 50).lineTo(545, doc.page.height - 50).stroke();
+            
+            doc.fontSize(8).font('Helvetica').fillColor('#666666');
+            doc.text(`Total de registros: ${datosReporte.length}`, 50, doc.page.height - 45);
+            doc.text(`Sistema de Clasificación de Papas - ${moment().format('DD/MM/YYYY HH:mm:ss')}`, 300, doc.page.height - 45, { align: 'right' });
             
             doc.end();
             
