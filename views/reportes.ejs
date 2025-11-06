@@ -252,7 +252,7 @@
                                         <% } %>
                                         <td>
                                             <% if (cls.idImagen && cls.idImagen.urlImagen) { %>
-                                                <a href="#" onclick="abrirVistaPrevia('/<%= cls.idImagen.urlImagen %>', '<%= cls.idImagen.nombreOriginal %>')" class="text-decoration-none">
+                                                <a href="#" onclick="abrirVistaPrevia('<%= cls.idImagen.urlImagen %>', '<%= cls.idImagen.nombreOriginal %>')" class="text-decoration-none">
                                                     <img src="/<%= cls.idImagen.urlImagen %>" 
                                                          class="img-thumbnail rounded" 
                                                          style="width: 70px; height: 70px; object-fit: cover; cursor: pointer; transition: transform 0.2s;"
@@ -400,19 +400,22 @@
 
     <!-- Modal Vista Previa de Imagen -->
     <div class="modal fade" id="vistaPreviewModal" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content bg-dark">
+                <div class="modal-header bg-dark border-secondary">
+                    <h5 class="modal-title text-white">
                         <i class="fas fa-image me-2"></i>
                         Vista Previa de Imagen
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body text-center">
-                    <img id="vistaPreviewImage" src="" alt="Vista Previa" style="max-width: 100%; max-height: 70vh; object-fit: contain;">
+                <div class="modal-body text-center p-4" style="background-color: #f8f9fa;">
+                    <div id="loadingSpinner" class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <img id="vistaPreviewImage" src="" alt="Vista Previa" style="max-width: 100%; max-height: 75vh; object-fit: contain; display: none; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" onload="document.getElementById('loadingSpinner').style.display='none'; this.style.display='block';" onerror="document.getElementById('loadingSpinner').style.display='none'; this.style.display='block'; alert('Error al cargar la imagen');">
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer bg-dark border-secondary">
                     <p id="vistaPreviewNombre" class="text-muted mb-0"></p>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 </div>
@@ -598,8 +601,19 @@
         
         function abrirVistaPrevia(urlImagen, nombreArchivo) {
             event.preventDefault();
-            document.getElementById('vistaPreviewImage').src = urlImagen;
-            document.getElementById('vistaPreviewNombre').textContent = 'Archivo: ' + nombreArchivo;
+            
+            // Asegurar que la URL comienza con /
+            let urlCompleta = urlImagen.startsWith('/') ? urlImagen : '/' + urlImagen;
+            
+            // Mostrar spinner y ocultar imagen
+            document.getElementById('loadingSpinner').style.display = 'block';
+            document.getElementById('vistaPreviewImage').style.display = 'none';
+            
+            // Establecer la URL de la imagen
+            document.getElementById('vistaPreviewImage').src = urlCompleta;
+            document.getElementById('vistaPreviewNombre').textContent = 'Archivo: ' + (nombreArchivo || 'Sin nombre');
+            
+            // Abrir el modal
             new bootstrap.Modal(document.getElementById('vistaPreviewModal')).show();
         }
     </script>
