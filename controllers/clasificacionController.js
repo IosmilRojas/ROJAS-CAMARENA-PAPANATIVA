@@ -89,8 +89,11 @@ class ClasificacionController {
             }
             
             // Guardar información de la imagen en BD
+            // Convertir la ruta a una ruta relativa desde la carpeta public
+            const rutaRelativa = req.file.path.replace(/\\/g, '/').replace(process.cwd().replace(/\\/g, '/') + '/public/', '');
+            
             const nuevaImagen = new Imagen({
-                urlImagen: req.file.path.replace(/\\/g, '/'),
+                urlImagen: rutaRelativa,
                 nombreOriginal: req.file.originalname,
                 tamaño: req.file.size,
                 formato: path.extname(req.file.originalname).substring(1).toLowerCase(),
