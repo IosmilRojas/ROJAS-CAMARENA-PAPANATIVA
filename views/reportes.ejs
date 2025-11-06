@@ -252,10 +252,14 @@
                                         <% } %>
                                         <td>
                                             <% if (cls.idImagen && cls.idImagen.urlImagen) { %>
-                                                <img src="/<%= cls.idImagen.urlImagen %>" 
-                                                     class="img-thumbnail" 
-                                                     style="width: 50px; height: 50px; object-fit: cover;"
-                                                     title="<%= cls.idImagen.nombreOriginal || 'Sin nombre' %>">
+                                                <a href="#" onclick="abrirVistaPrevia('/<%= cls.idImagen.urlImagen %>', '<%= cls.idImagen.nombreOriginal %>')" class="text-decoration-none">
+                                                    <img src="/<%= cls.idImagen.urlImagen %>" 
+                                                         class="img-thumbnail rounded" 
+                                                         style="width: 70px; height: 70px; object-fit: cover; cursor: pointer; transition: transform 0.2s;"
+                                                         onmouseover="this.style.transform='scale(1.1)'"
+                                                         onmouseout="this.style.transform='scale(1)'"
+                                                         title="Haz clic para ampliar">
+                                                </a>
                                             <% } else { %>
                                                 <i class="fas fa-image text-muted"></i>
                                             <% } %>
@@ -300,7 +304,16 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <%= cls.tiempoProcesamientoMs || 'N/A' %>
+                                            <% 
+                                                let tiempo = cls.tiempoProcesamientoMs || 0;
+                                                let tiempoFormato = tiempo > 1000 ? 
+                                                    (tiempo / 1000).toFixed(2) + ' s' : 
+                                                    tiempo + ' ms';
+                                            %>
+                                            <span class="badge bg-info text-white">
+                                                <i class="fas fa-hourglass-end me-1"></i>
+                                                <%= tiempoFormato %>
+                                            </span>
                                         </td>
                                         <td>
                                             <div class="btn-group btn-group-sm">
@@ -380,6 +393,28 @@
                 </div>
                 <div class="modal-body" id="trazabilidadContent">
                     <!-- Content will be loaded via AJAX -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Vista Previa de Imagen -->
+    <div class="modal fade" id="vistaPreviewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-image me-2"></i>
+                        Vista Previa de Imagen
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="vistaPreviewImage" src="" alt="Vista Previa" style="max-width: 100%; max-height: 70vh; object-fit: contain;">
+                </div>
+                <div class="modal-footer">
+                    <p id="vistaPreviewNombre" class="text-muted mb-0"></p>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>
@@ -559,6 +594,13 @@
                 console.error('Error:', error);
                 alert('Error de conexión');
             }
+        }
+        
+        function abrirVistaPrevia(urlImagen, nombreArchivo) {
+            event.preventDefault();
+            document.getElementById('vistaPreviewImage').src = urlImagen;
+            document.getElementById('vistaPreviewNombre').textContent = 'Archivo: ' + nombreArchivo;
+            new bootstrap.Modal(document.getElementById('vistaPreviewModal')).show();
         }
     </script>
     
