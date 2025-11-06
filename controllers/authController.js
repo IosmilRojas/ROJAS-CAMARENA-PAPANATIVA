@@ -101,13 +101,173 @@ class AuthController {
                 return res.redirect('/login');
             }
             
-            // Obtener estadísticas básicas para el dashboard
+            // Obtener usuario de la BD
             const usuario = await Usuario.findById(req.session.usuario.id);
+            
+            const Clasificacion = require('../models/Clasificacion');
+            const VariedadPapa = require('../models/VariedadPapa');
+            const moment = require('moment');
+            
+            // Construir filtros según el rol
+            let filtros = {};
+            if (usuario.rol !== 'administrador') {
+                filtros.idUsuario = usuario._id;
+            }
+            
+            // Estadísticas generales
+            const totalClasificaciones = await Clasificacion.countDocuments(filtros);
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            const clasificacionesHoy = await Clasificacion.countDocuments({
+                ...filtros,
+                fechaClasificacion: { $gte: hoy }
+            });
+            
+            // Análisis realizados (total)
+            const analisisRealizados = await Clasificacion.countDocuments(filtros);
+            
+            // Precisión del modelo (confianza promedio)
+            const estadisticas = await Clasificacion.aggregate([
+                { $match: filtros },
+                {
+                    $group: {
+                        _id: null,
+                        confianzaPromedio: { $avg: '$confianza' },
+                        total: { $sum: 1 }
+                    }
+                }
+            ]);
+            
+            const confianzaPromedio = estadisticas.length > 0 ? (estadisticas[0].confianzaPromedio * 100).toFixed(2) : 0;
+            
+            // Tiempo promedio
+            const tiempoData = await Clasificacion.aggregate([
+                { $match: filtros },
+                {
+                    $group: {
+                        _id: null,
+                        tiempoPromedio: { $avg: '$tiempoProcesamientoMs' }
+                    }
+                }
+            ]);
+            
+            const tiempoPromedio = tiempoData.length > 0 ? (tiempoData[0].tiempoPromedio / 1000).toFixed(2) : 0;
+            
+            // Clasificaciones por variedad (últimos 7 días)
+            const hace7Dias = new Date();
+            hace7Dias.setDate(hace7Dias.getDate() - 7);
+            
+            const clasificacionesPorVariedad = await Clasificacion.aggregate([
+                {
+                    $match: {
+                        ...filtros,
+                        fechaClasificacion: { $gte: hace7Dias }
+                    }
+                },
+                {
+                    $group: {
+                        _id: '$idVariedad',
+                        cantidad: { $sum: 1 }
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'variedadpapas',
+                        localField: '_id',
+                        foreignField: '_id',
+                        as: 'variedad'
+                    }
+                },
+                {
+                    $unwind: '$variedad'
+                },
+                {
+                    $project: {
+                        nombreComun: '$variedad.nombreComun',
+                        cantidad: 1,
+                        porcentaje: {
+                            $cond: [
+                                { $eq: [totalClasificaciones, 0] },
+                                0,
+                                { $multiply: [{ $divide: ['$cantidad', totalClasificaciones] }, 100] }
+                            ]
+                        }
+                    }
+                },
+                { $sort: { cantidad: -1 } }
+            ]);
+            
+            // Actividad reciente (últimas 5 clasificaciones)
+            const actividadReciente = await Clasificacion.find(filtros)
+                .populate('idVariedad', 'nombreComun')
+                .populate('idUsuario', 'nombre')
+                .sort({ fechaClasificacion: -1 })
+                .limit(5)
+                .lean();
+            
+            // Transformar datos para la vista
+            const actividadFormateada = actividadReciente.map(c => ({
+                ...c,
+                fechaFormato: moment(c.fechaClasificacion).fromNow(),
+                confianzaFormato: (c.confianza * 100).toFixed(1) + '%'
+            }));
+            
+            // Condiciones (apto/no apto)
+            const condiciones = await Clasificacion.aggregate([
+                { $match: filtros },
+                {
+                    $group: {
+                        _id: '$condicion',
+                        cantidad: { $sum: 1 }
+                    }
+                }
+            ]);
+            
+            const aptos = condiciones.find(c => c._id === 'apto')?.cantidad || 0;
+            const noAptos = condiciones.find(c => c._id === 'no apto')?.cantidad || 0;
+            
+            // Comparativa vs mes anterior
+            const mesActual = new Date();
+            mesActual.setDate(1);
+            mesActual.setHours(0, 0, 0, 0);
+            
+            const mesAnterior = new Date(mesActual);
+            mesAnterior.setMonth(mesAnterior.getMonth() - 1);
+            
+            const clasificacionesMesActual = await Clasificacion.countDocuments({
+                ...filtros,
+                fechaClasificacion: { $gte: mesActual }
+            });
+            
+            const clasificacionesMesAnterior = await Clasificacion.countDocuments({
+                ...filtros,
+                fechaClasificacion: {
+                    $gte: mesAnterior,
+                    $lt: mesActual
+                }
+            });
+            
+            const variacionMes = clasificacionesMesAnterior > 0 
+                ? ((clasificacionesMesActual - clasificacionesMesAnterior) / clasificacionesMesAnterior * 100).toFixed(1)
+                : 0;
             
             res.render('dashboard', {
                 titulo: 'Dashboard - Clasificador de Papas',
                 usuario: req.session.usuario,
-                fechaUltimoAcceso: usuario.ultimoAcceso
+                fechaUltimoAcceso: usuario.ultimoAcceso,
+                stats: {
+                    clasificacionesHoy,
+                    totalClasificaciones,
+                    analisisRealizados,
+                    confianzaPromedio,
+                    tiempoPromedio,
+                    aptos,
+                    noAptos,
+                    variacionMes
+                },
+                clasificacionesPorVariedad,
+                actividadReciente: actividadFormateada,
+                momento: moment
             });
             
         } catch (error) {

@@ -153,7 +153,7 @@
                                 </ul>
                             </div>
                         </div>
-                    </div>
+                    </div>  
                 </div>
                 
                 <!-- Statistics Cards -->
@@ -162,14 +162,15 @@
                         <div class="stat-icon quality">
                             <i class="fas fa-check-circle"></i>
                         </div>
-                        <div class="stat-value" id="stat-calidad">156</div>
+                        <div class="stat-value" id="stat-calidad"><%= stats.clasificacionesHoy %></div>
                         <div class="stat-label">Papas Clasificadas Hoy</div>
-                        <div class="stat-change positive">
-                            <i class="fas fa-arrow-up me-1"></i>
-                            +12% vs ayer
+                        <div class="stat-change <%= stats.variacionMes > 0 ? 'positive' : 'negative' %>">
+                            <i class="fas fa-arrow-<%= stats.variacionMes > 0 ? 'up' : 'down' %> me-1"></i>
+                            <%= stats.variacionMes > 0 ? '+' : '' %><%= stats.variacionMes %>% vs mes anterior
                         </div>
                         <div class="progress-eco">
-                            <div class="progress-bar-eco" style="width: 78%"></div>
+                            <% var progWidth = Math.min((stats.clasificacionesHoy / Math.max(stats.totalClasificaciones / 30, 1)) * 100, 100); %>
+                            <div class="progress-bar-eco" style="width: <%= progWidth %>%; "></div>
                         </div>
                     </div>
                     
@@ -177,11 +178,15 @@
                         <div class="stat-icon analysis">
                             <i class="fas fa-microscope"></i>
                         </div>
-                        <div class="stat-value" id="stat-analisis">2,340</div>
+                        <div class="stat-value" id="stat-analisis"><%= stats.totalClasificaciones.toLocaleString('es-PE') %></div>
                         <div class="stat-label">Análisis Realizados</div>
                         <div class="stat-change positive">
                             <i class="fas fa-arrow-up me-1"></i>
-                            +8.5% este mes
+                            <% if (stats.aptos + stats.noAptos > 0) { %>
+                                <%= ((stats.aptos / (stats.aptos + stats.noAptos)) * 100).toFixed(1) %>% aptos
+                            <% } else { %>
+                                Sin datos
+                            <% } %>
                         </div>
                         <div class="progress-eco">
                             <div class="progress-bar-eco" style="width: 85%"></div>
@@ -192,14 +197,14 @@
                         <div class="stat-icon success">
                             <i class="fas fa-trophy"></i>
                         </div>
-                        <div class="stat-value" id="stat-precision">94.2%</div>
+                        <div class="stat-value" id="stat-precision"><%= stats.confianzaPromedio %>%</div>
                         <div class="stat-label">Precisión del Modelo</div>
                         <div class="stat-change positive">
                             <i class="fas fa-arrow-up me-1"></i>
-                            +2.1% mejorado
+                            Confianza promedio
                         </div>
                         <div class="progress-eco">
-                            <div class="progress-bar-eco" style="width: 94%"></div>
+                            <div class="progress-bar-eco" style="width: <%= stats.confianzaPromedio %>%; "></div>
                         </div>
                     </div>
                     
@@ -207,11 +212,11 @@
                         <div class="stat-icon processing">
                             <i class="fas fa-clock"></i>
                         </div>
-                        <div class="stat-value" id="stat-tiempo">1.3s</div>
+                        <div class="stat-value" id="stat-tiempo"><%= stats.tiempoPromedio %>s</div>
                         <div class="stat-label">Tiempo Promedio</div>
-                        <div class="stat-change negative">
+                        <div class="stat-change positive">
                             <i class="fas fa-arrow-down me-1"></i>
-                            -0.2s optimizado
+                            ms/análisis
                         </div>
                         <div class="progress-eco">
                             <div class="progress-bar-eco" style="width: 65%"></div>
@@ -281,11 +286,28 @@
                                 </div>
                             </div>
                             <div class="chart-placeholder">
-                                <div class="text-center">
-                                    <i class="fas fa-chart-area fs-1 mb-3 text-success"></i>
-                                    <p>Gráfico de Clasificaciones por Variedad</p>
-                                    <small class="text-muted">Amarilla: 45% • Huayro: 32% • Peruanita: 23%</small>
-                                </div>
+                                <% if (clasificacionesPorVariedad && clasificacionesPorVariedad.length > 0) { %>
+                                    <div class="row mt-3">
+                                        <% clasificacionesPorVariedad.forEach(function(item) { %>
+                                        <div class="col-md-4 mb-3">
+                                            <div class="text-center">
+                                                <h5><%= item.nombreComun %></h5>
+                                                <h3 class="text-success"><%= item.cantidad %></h3>
+                                                <div class="progress">
+                                                    <div class="progress-bar bg-success" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width: <%= item.porcentaje %>%; ">
+                                                        <%= item.porcentaje.toFixed(1) %>%
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <% }); %>
+                                    </div>
+                                <% } else { %>
+                                    <div class="text-center">
+                                        <i class="fas fa-chart-area fs-1 mb-3 text-success"></i>
+                                        <p>Sin clasificaciones en los últimos 7 días</p>
+                                    </div>
+                                <% } %>
                             </div>
                         </div>
                     </div>
@@ -295,47 +317,29 @@
                         <div class="recent-activity animate__animated animate__fadeInRight animate__delay-2s">
                             <h4 class="mb-3">🕒 Actividad Reciente</h4>
                             
-                            <div class="activity-item">
-                                <div class="activity-icon success">
-                                    <i class="fas fa-check"></i>
+                            <% if (actividadReciente && actividadReciente.length > 0) { %>
+                                <% actividadReciente.forEach(function(item) { %>
+                                <div class="activity-item">
+                                    <div class="activity-icon <%= item.condicion === 'apto' ? 'success' : 'warning' %>">
+                                        <i class="fas fa-<%= item.condicion === 'apto' ? 'check' : 'times' %>"></i>
+                                    </div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">
+                                            <%= item.idVariedad ? item.idVariedad.nombreComun : 'Papa' %> - <%= item.condicion %>
+                                        </div>
+                                        <div class="activity-description">
+                                            Confianza: <%= item.confianzaFormato %> • <%= item.idUsuario ? item.idUsuario.nombre : 'Usuario' %>
+                                        </div>
+                                    </div>
+                                    <div class="activity-time"><%= item.fechaFormato %></div>
                                 </div>
-                                <div class="activity-content">
-                                    <div class="activity-title">Papa Amarilla clasificada</div>
-                                    <div class="activity-description">Calidad: Apta para consumo</div>
+                                <% }); %>
+                            <% } else { %>
+                                <div class="text-center text-muted py-4">
+                                    <i class="fas fa-inbox fs-3 mb-2"></i>
+                                    <p>No hay actividad reciente</p>
                                 </div>
-                                <div class="activity-time">Hace 5 min</div>
-                            </div>
-                            
-                            <div class="activity-item">
-                                <div class="activity-icon info">
-                                    <i class="fas fa-upload"></i>
-                                </div>
-                                <div class="activity-content">
-                                    <div class="activity-title">Lote procesado exitosamente</div>
-                                    <div class="activity-description">15 imágenes analizadas</div>
-                                </div>
-                                <div class="activity-time">Hace 12 min</div>
-                            </div>
-                            
-                            <div class="activity-item">
-                                <div class="activity-icon warning">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                </div>
-                                <div class="activity-content">
-                                    <div class="activity-title">Papa Huayro - Baja calidad</div>
-                                    <div class="activity-description">Requiere revisión manual</div>
-                                </div>
-                                <div class="activity-time">Hace 18 min</div>
-                            </div>
-                            
-                            <div class="activity-item">
-                                <div class="activity-icon success">
-                                    <i class="fas fa-robot"></i>
-                                </div>
-                                <div class="activity-content">
-                                    <div class="activity-title">Modelo IA actualizado</div>
-                                    <div class="activity-description">Precisión mejorada al 94.2%</div>
-                                </div>
+                            <% } %>
                                 <div class="activity-time">Hace 2 horas</div>
                             </div>
                             
@@ -372,29 +376,29 @@
                                     <div class="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 rounded-circle mb-3" style="width: 80px; height: 80px;">
                                         <i class="fas fa-tachometer-alt fs-2 text-success"></i>
                                     </div>
-                                    <h5>Velocidad</h5>
-                                    <p class="text-muted">1.3s promedio por imagen</p>
+                                    <h5>Velocidad Promedio</h5>
+                                    <p class="text-muted"><%= stats.tiempoPromedio %>s por imagen</p>
                                 </div>
                                 <div class="col-md-3 text-center">
                                     <div class="d-inline-flex align-items-center justify-content-center bg-info bg-opacity-10 rounded-circle mb-3" style="width: 80px; height: 80px;">
                                         <i class="fas fa-bullseye fs-2 text-info"></i>
                                     </div>
-                                    <h5>Precisión</h5>
-                                    <p class="text-muted">94.2% de acierto</p>
+                                    <h5>Confianza Promedio</h5>
+                                    <p class="text-muted"><%= stats.confianzaPromedio %>% de certeza</p>
                                 </div>
                                 <div class="col-md-3 text-center">
                                     <div class="d-inline-flex align-items-center justify-content-center bg-warning bg-opacity-10 rounded-circle mb-3" style="width: 80px; height: 80px;">
-                                        <i class="fas fa-server fs-2 text-warning"></i>
+                                        <i class="fas fa-check-double fs-2 text-warning"></i>
                                     </div>
-                                    <h5>Disponibilidad</h5>
-                                    <p class="text-muted">99.8% uptime</p>
+                                    <h5>Papas Aptas</h5>
+                                    <p class="text-muted"><%= stats.aptos %> clasificadas</p>
                                 </div>
                                 <div class="col-md-3 text-center">
                                     <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 rounded-circle mb-3" style="width: 80px; height: 80px;">
-                                        <i class="fas fa-database fs-2 text-primary"></i>
+                                        <i class="fas fa-times-circle fs-2 text-primary"></i>
                                     </div>
-                                    <h5>Almacenamiento</h5>
-                                    <p class="text-muted">2.4TB procesados</p>
+                                    <h5>Papas No Aptas</h5>
+                                    <p class="text-muted"><%= stats.noAptos %> clasificadas</p>
                                 </div>
                             </div>
                         </div>
