@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios - PapaIA</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 80px;
+        }
+        
+        .page-title {
+            color: #28a745;
+            font-weight: 700;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border-radius: 12px 12px 0 0 !important;
+            padding: 15px 20px;
+        }
+        
+        .table thead th {
+            background-color: #f8f9fa;
+            color: #28a745;
+            font-weight: 600;
+            border: none;
+        }
+        
+        .badge-activo {
+            background-color: #28a745;
+        }
+        
+        .badge-inactivo {
+            background-color: #dc3545;
+        }
+        
+        .btn-action {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.875rem;
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+        
+        .form-label {
+            color: #28a745;
+            font-weight: 600;
+        }
+        
+        .alert-info {
+            background-color: #e7f3ff;
+            border-color: #b3d9ff;
+            color: #004085;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <%- include('partials/navbar') %>
+    
+    <div class="container-fluid px-4">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/"><i class="fas fa-home me-2"></i>Inicio</a></li>
+                <li class="breadcrumb-item active"><i class="fas fa-users me-2"></i>Gestión de Usuarios</li>
+            </ol>
+        </nav>
+        
+        <!-- Page Title -->
+        <h1 class="page-title">
+            <i class="fas fa-users me-3"></i>Gestión de Usuarios y Permisos
+        </h1>
+        
+        <!-- Alert Container -->
+        <div id="alertContainer"></div>
+        
+        <!-- Crear Usuario Card -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-plus me-2"></i>Crear Nuevo Usuario
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="formCrearUsuario">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="nombre" class="form-label">Nombre *</label>
+                            <input type="text" class="form-control" id="nombre" name="nombre" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="apellido" class="form-label">Apellido</label>
+                            <input type="text" class="form-control" id="apellido" name="apellido">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="correo" class="form-label">Correo Electrónico *</label>
+                            <input type="email" class="form-control" id="correo" name="correo" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="dni" class="form-label">DNI/Documento</label>
+                            <input type="text" class="form-control" id="dni" name="dni">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="telefono" class="form-label">Teléfono</label>
+                            <input type="tel" class="form-control" id="telefono" name="telefono">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="genero" class="form-label">Género</label>
+                            <select class="form-select" id="genero" name="genero">
+                                <option value="no-especifica">No especifica</option>
+                                <option value="masculino">Masculino</option>
+                                <option value="femenino">Femenino</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="fechaNacimiento" class="form-label">Fecha de Nacimiento</label>
+                            <input type="date" class="form-control" id="fechaNacimiento" name="fechaNacimiento">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="direccion" class="form-label">Dirección</label>
+                            <input type="text" class="form-control" id="direccion" name="direccion">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="rol" class="form-label">Rol de Usuario *</label>
+                            <select class="form-select" id="rol" name="rol" required>
+                                <option value="">Seleccionar rol</option>
+                                <option value="operador">Operador (Clasificación)</option>
+                                <option value="revisor">Revisor (Validación)</option>
+                                <option value="administrador">Administrador (Gestión)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="departamento" class="form-label">Departamento *</label>
+                            <input type="text" class="form-control" id="departamento" name="departamento" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="provincia" class="form-label">Provincia</label>
+                            <input type="text" class="form-control" id="provincia" name="provincia">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="distrito" class="form-label">Distrito</label>
+                            <input type="text" class="form-control" id="distrito" name="distrito">
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <div class="alert alert-info mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Se enviará un correo al usuario con su contraseña temporal para que la cambie en el primer acceso.
+                            </div>
+                        </div>
+                        
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-2"></i>Crear Usuario
+                            </button>
+                            <button type="reset" class="btn btn-outline-secondary ms-2">
+                                <i class="fas fa-redo me-2"></i>Limpiar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Lista de Usuarios -->
+        <div class="card">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>Lista de Usuarios
+                        </h5>
+                    </div>
+                    <div class="col-auto">
+                        <div class="input-group input-group-sm" style="width: 250px;">
+                            <input type="text" class="form-control" placeholder="Buscar usuario..." id="buscarUsuario">
+                            <button class="btn btn-outline-secondary" type="button">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table id="tablaUsuarios" class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Nombre Completo</th>
+                                <th>Correo</th>
+                                <th>Teléfono</th>
+                                <th>Rol</th>
+                                <th>Departamento</th>
+                                <th>Estado</th>
+                                <th>Último Acceso</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoTabla">
+                            <!-- Se llenará con JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Usuarios Desactivados -->
+        <div class="card mt-4">
+            <div class="card-header bg-secondary">
+                <h5 class="mb-0">
+                    <i class="fas fa-ban me-2"></i>Usuarios Desactivados
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table id="tablaUsuariosDesactivados" class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Nombre Completo</th>
+                                <th>Correo</th>
+                                <th>Teléfono</th>
+                                <th>Rol</th>
+                                <th>Departamento</th>
+                                <th>Fecha Desactivación</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoTablaDesactivados">
+                            <!-- Se llenará con JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="sinDesactivados" class="text-center p-4 text-muted">
+                    <i class="fas fa-check-circle" style="font-size: 2rem;"></i>
+                    <p class="mt-2">No hay usuarios desactivados</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Editar Usuario -->
+    <div class="modal fade" id="modalEditarUsuario" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Usuario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formEditarUsuario">
+                        <input type="hidden" id="idUsuarioEdit">
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="nombreEdit" class="form-label">Nombre</label>
+                                <input type="text" class="form-control" id="nombreEdit" name="nombre" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="apellidoEdit" class="form-label">Apellido</label>
+                                <input type="text" class="form-control" id="apellidoEdit" name="apellido">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="correoEdit" class="form-label">Correo</label>
+                                <input type="email" class="form-control" id="correoEdit" name="correo" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="dniEdit" class="form-label">DNI/Documento</label>
+                                <input type="text" class="form-control" id="dniEdit" name="dni">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="telefonoEdit" class="form-label">Teléfono</label>
+                                <input type="tel" class="form-control" id="telefonoEdit" name="telefono">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="generoEdit" class="form-label">Género</label>
+                                <select class="form-select" id="generoEdit" name="genero">
+                                    <option value="no-especifica">No especifica</option>
+                                    <option value="masculino">Masculino</option>
+                                    <option value="femenino">Femenino</option>
+                                    <option value="otro">Otro</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="fechaNacimientoEdit" class="form-label">Fecha de Nacimiento</label>
+                                <input type="date" class="form-control" id="fechaNacimientoEdit" name="fechaNacimiento">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="direccionEdit" class="form-label">Dirección</label>
+                                <input type="text" class="form-control" id="direccionEdit" name="direccion">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="rolEdit" class="form-label">Rol</label>
+                                <select class="form-select" id="rolEdit" name="rol" required>
+                                    <option value="operador">Operador (Clasificación)</option>
+                                    <option value="revisor">Revisor (Validación)</option>
+                                    <option value="administrador">Administrador (Gestión)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="departamentoEdit" class="form-label">Departamento</label>
+                                <input type="text" class="form-control" id="departamentoEdit" name="departamento" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="provinciaEdit" class="form-label">Provincia</label>
+                                <input type="text" class="form-control" id="provinciaEdit" name="provincia">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="distritoEdit" class="form-label">Distrito</label>
+                                <input type="text" class="form-control" id="distritoEdit" name="distrito">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="guardarEdicion(this)">Guardar Cambios</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Cambiar Rol/Permisos -->
+    <div class="modal fade" id="modalPermisos" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Gestionar Permisos</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="usuarioPermisos" class="mb-3">
+                        <p><strong>Usuario:</strong> <span id="nombreUsuarioPermisos"></span></p>
+                    </div>
+                    
+                    <form id="formPermisos">
+                        <input type="hidden" id="idUsuarioPermisos">
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Rol Principal</label>
+                            <select class="form-select" id="rolPermisos" required>
+                                <option value="operador">Operador (Clasificación de papas)</option>
+                                <option value="revisor">Revisor (Validación de clasificaciones)</option>
+                                <option value="administrador">Administrador (Gestión del sistema)</option>
+                            </select>
+                        </div>
+                        
+                        <hr>
+                        
+                        <label class="form-label">Permisos Específicos</label>
+                        
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="permClasificar" name="permisos" value="clasificar">
+                            <label class="form-check-label" for="permClasificar">
+                                Realizar clasificaciones
+                            </label>
+                        </div>
+                        
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="permValidar" name="permisos" value="validar">
+                            <label class="form-check-label" for="permValidar">
+                                Validar clasificaciones
+                            </label>
+                        </div>
+                        
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="permReportes" name="permisos" value="reportes">
+                            <label class="form-check-label" for="permReportes">
+                                Ver reportes
+                            </label>
+                        </div>
+                        
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="permUsuarios" name="permisos" value="usuarios">
+                            <label class="form-check-label" for="permUsuarios">
+                                Gestionar usuarios
+                            </label>
+                        </div>
+                        
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="permAdministracion" name="permisos" value="administracion">
+                            <label class="form-check-label" for="permAdministracion">
+                                Acceso a administración del sistema
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="guardarPermisos()">Guardar Permisos</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- DataTables JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    
+    <script>
+        let tabla = null;
+        
+        // Cargar lista de usuarios al inicio
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarUsuarios();
+            cargarUsuariosDesactivados();
+            
+            // Event listener para crear usuario
+            document.getElementById('formCrearUsuario').addEventListener('submit', crearUsuario);
+        });
+        
+        function cargarUsuarios() {
+            fetch('/gestion-usuarios/api/usuarios')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        mostrarUsuarios(data.usuarios);
+                    } else {
+                        mostrarAlerta('Error al cargar usuarios', 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    mostrarAlerta('Error: ' + error.message, 'danger');
+                });
+        }
+        
+        function mostrarUsuarios(usuarios) {
+            const tbody = document.getElementById('cuerpoTabla');
+            tbody.innerHTML = '';
+            
+            usuarios.forEach(usuario => {
+                const ultimoAcceso = usuario.ultimoAcceso ? 
+                    new Date(usuario.ultimoAcceso).toLocaleString('es-ES') : 
+                    'Nunca';
+                
+                const estadoBadge = usuario.activo ? 
+                    '<span class="badge badge-activo">Activo</span>' : 
+                    '<span class="badge badge-inactivo">Inactivo</span>';
+                
+                const nombreCompleto = usuario.apellido ? 
+                    `${usuario.nombre} ${usuario.apellido}` : 
+                    usuario.nombre;
+                
+                const telefono = usuario.telefono || '-';
+                
+                const row = `
+                    <tr>
+                        <td>
+                            <i class="fas fa-user me-2 text-success"></i>
+                            ${nombreCompleto}
+                        </td>
+                        <td>${usuario.correo}</td>
+                        <td>${telefono}</td>
+                        <td>
+                            <span class="badge bg-info">${usuario.rol}</span>
+                        </td>
+                        <td>${usuario.departamento || '-'}</td>
+                        <td>${estadoBadge}</td>
+                        <td><small>${ultimoAcceso}</small></td>
+                        <td>
+                            <button class="btn btn-sm btn-primary btn-action" 
+                                title="Editar usuario"
+                                onclick="editarUsuario('${usuario._id}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-warning btn-action" 
+                                title="Gestionar permisos"
+                                onclick="abrirPermisos('${usuario._id}', '${nombreCompleto}', '${usuario.rol}')">
+                                <i class="fas fa-lock"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger btn-action" 
+                                title="${usuario.activo ? 'Desactivar' : 'Activar'}"
+                                onclick="desactivarUsuario('${usuario._id}', '${nombreCompleto}', ${usuario.activo})">
+                                <i class="fas fa-${usuario.activo ? 'ban' : 'check'}"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+        
+        function cargarUsuariosDesactivados() {
+            fetch('/gestion-usuarios/api/usuarios-desactivados')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        mostrarUsuariosDesactivados(data.usuarios);
+                    } else {
+                        console.error('Error al cargar usuarios desactivados');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+        
+        function mostrarUsuariosDesactivados(usuarios) {
+            const tbody = document.getElementById('cuerpoTablaDesactivados');
+            const sinDesactivados = document.getElementById('sinDesactivados');
+            tbody.innerHTML = '';
+            
+            if (usuarios.length === 0) {
+                tbody.style.display = 'none';
+                sinDesactivados.style.display = 'block';
+                return;
+            }
+            
+            sinDesactivados.style.display = 'none';
+            tbody.style.display = 'table-row-group';
+            
+            usuarios.forEach(usuario => {
+                const fechaDesactivacion = usuario.fechaActualizacion ? 
+                    new Date(usuario.fechaActualizacion).toLocaleString('es-ES') : 
+                    'Desconocida';
+                
+                const nombreCompleto = usuario.apellido ? 
+                    `${usuario.nombre} ${usuario.apellido}` : 
+                    usuario.nombre;
+                
+                const telefono = usuario.telefono || '-';
+                
+                const row = `
+                    <tr>
+                        <td>
+                            <i class="fas fa-user me-2 text-danger"></i>
+                            ${nombreCompleto}
+                        </td>
+                        <td>${usuario.correo}</td>
+                        <td>${telefono}</td>
+                        <td>
+                            <span class="badge bg-info">${usuario.rol}</span>
+                        </td>
+                        <td>${usuario.departamento || '-'}</td>
+                        <td><small>${fechaDesactivacion}</small></td>
+                        <td>
+                            <button class="btn btn-sm btn-success btn-action" 
+                                title="Habilitar usuario"
+                                onclick="habilitarUsuario('${usuario._id}', '${nombreCompleto}')">
+                                <i class="fas fa-redo"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger btn-action" 
+                                title="Eliminar permanentemente"
+                                onclick="eliminarUsuarioPermanente('${usuario._id}', '${nombreCompleto}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+        
+        function crearUsuario(e) {
+            e.preventDefault();
+            
+            const formData = {
+                nombre: document.getElementById('nombre').value,
+                apellido: document.getElementById('apellido').value,
+                correo: document.getElementById('correo').value,
+                dni: document.getElementById('dni').value,
+                telefono: document.getElementById('telefono').value,
+                genero: document.getElementById('genero').value,
+                fechaNacimiento: document.getElementById('fechaNacimiento').value,
+                direccion: document.getElementById('direccion').value,
+                rol: document.getElementById('rol').value,
+                departamento: document.getElementById('departamento').value,
+                provincia: document.getElementById('provincia').value,
+                distrito: document.getElementById('distrito').value
+            };
+            
+            fetch('/gestion-usuarios/api/usuarios', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarAlerta('Usuario creado exitosamente', 'success');
+                    document.getElementById('formCrearUsuario').reset();
+                    cargarUsuarios();
+                } else {
+                    mostrarAlerta(data.error || 'Error al crear usuario', 'danger');
+                }
+            })
+            .catch(error => {
+                mostrarAlerta('Error: ' + error.message, 'danger');
+            });
+        }
+        
+        function editarUsuario(id) {
+            // Cargar datos del usuario via API
+            fetch(`/gestion-usuarios/api/usuarios/${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const usuario = data.usuario;
+                        document.getElementById('idUsuarioEdit').value = id;
+                        document.getElementById('nombreEdit').value = usuario.nombre || '';
+                        document.getElementById('apellidoEdit').value = usuario.apellido || '';
+                        document.getElementById('correoEdit').value = usuario.correo || '';
+                        document.getElementById('dniEdit').value = usuario.dni || '';
+                        document.getElementById('telefonoEdit').value = usuario.telefono || '';
+                        document.getElementById('generoEdit').value = usuario.genero || 'no-especifica';
+                        document.getElementById('fechaNacimientoEdit').value = usuario.fechaNacimiento ? usuario.fechaNacimiento.split('T')[0] : '';
+                        document.getElementById('direccionEdit').value = usuario.direccion || '';
+                        document.getElementById('rolEdit').value = usuario.rol || 'operador';
+                        document.getElementById('departamentoEdit').value = usuario.departamento || '';
+                        document.getElementById('provinciaEdit').value = usuario.ubicacion?.provincia || '';
+                        document.getElementById('distritoEdit').value = usuario.ubicacion?.distrito || '';
+                        
+                        new bootstrap.Modal(document.getElementById('modalEditarUsuario')).show();
+                    } else {
+                        mostrarAlerta('Error al cargar datos del usuario', 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    mostrarAlerta('Error: ' + error.message, 'danger');
+                });
+        }
+        
+        function guardarEdicion(btnGuardar) {
+            const id = document.getElementById('idUsuarioEdit').value;
+            
+            if (!id) {
+                mostrarAlerta('Error: No se encontró el ID del usuario', 'danger');
+                return;
+            }
+            
+            const formData = {
+                nombre: document.getElementById('nombreEdit').value?.trim(),
+                apellido: document.getElementById('apellidoEdit').value?.trim(),
+                correo: document.getElementById('correoEdit').value?.trim(),
+                dni: document.getElementById('dniEdit').value?.trim(),
+                telefono: document.getElementById('telefonoEdit').value?.trim(),
+                genero: document.getElementById('generoEdit').value?.trim(),
+                fechaNacimiento: document.getElementById('fechaNacimientoEdit').value?.trim(),
+                direccion: document.getElementById('direccionEdit').value?.trim(),
+                rol: document.getElementById('rolEdit').value?.trim(),
+                departamento: document.getElementById('departamentoEdit').value?.trim(),
+                provincia: document.getElementById('provinciaEdit').value?.trim(),
+                distrito: document.getElementById('distritoEdit').value?.trim()
+            };
+            
+            console.log('Datos a enviar:', formData);
+            console.log('ID Usuario:', id);
+            
+            // Validar campos requeridos
+            if (!formData.nombre || !formData.correo || !formData.rol || !formData.departamento) {
+                mostrarAlerta('Por favor completa los campos requeridos (Nombre, Correo, Rol, Departamento)', 'warning');
+                return;
+            }
+            
+            // Deshabilitar botón mientras se envía
+            if (btnGuardar) {
+                btnGuardar.disabled = true;
+                btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+            }
+            
+            const url = `/gestion-usuarios/api/usuarios/${id}`;
+            console.log('URL de actualización:', url);
+            
+            fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                if (!response.ok) {
+                    // Leer el texto de error
+                    return response.text().then(text => {
+                        console.error('Error response:', text);
+                        throw new Error(`HTTP ${response.status}: ${text}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Respuesta del servidor:', data);
+                
+                if (data.success) {
+                    mostrarAlerta('Usuario actualizado exitosamente', 'success');
+                    setTimeout(() => {
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('modalEditarUsuario'));
+                        if (modal) {
+                            modal.hide();
+                        }
+                        // Recargar la tabla
+                        cargarUsuarios();
+                    }, 500);
+                } else {
+                    mostrarAlerta(data.error || 'Error al actualizar usuario', 'danger');
+                    console.error('Error en respuesta:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error en la petición:', error);
+                console.error('Stack:', error.stack);
+                mostrarAlerta('Error: ' + error.message, 'danger');
+            })
+            .finally(() => {
+                // Rehabilitar botón
+                if (btnGuardar) {
+                    btnGuardar.disabled = false;
+                    btnGuardar.innerHTML = 'Guardar Cambios';
+                }
+            });
+        }
+        
+        function abrirPermisos(id, nombre, rol) {
+            document.getElementById('idUsuarioPermisos').value = id;
+            document.getElementById('nombreUsuarioPermisos').textContent = nombre;
+            document.getElementById('rolPermisos').value = rol;
+            
+            new bootstrap.Modal(document.getElementById('modalPermisos')).show();
+        }
+        
+        function guardarPermisos() {
+            const id = document.getElementById('idUsuarioPermisos').value;
+            const rol = document.getElementById('rolPermisos').value;
+            
+            const permisos = Array.from(document.querySelectorAll('input[name="permisos"]:checked'))
+                .map(cb => cb.value);
+            
+            const formData = {
+                rol: rol,
+                permisos: permisos
+            };
+            
+            fetch(`/gestion-usuarios/api/usuarios/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarAlerta('Permisos actualizados exitosamente', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('modalPermisos')).hide();
+                    cargarUsuarios();
+                } else {
+                    mostrarAlerta(data.error || 'Error al actualizar permisos', 'danger');
+                }
+            })
+            .catch(error => mostrarAlerta('Error: ' + error.message, 'danger'));
+        }
+        
+        function desactivarUsuario(id, nombre, activo) {
+            const accion = activo ? 'desactivar' : 'activar';
+            
+            if (confirm(`¿Deseas ${accion} a ${nombre}?`)) {
+                fetch(`/gestion-usuarios/api/usuarios/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        mostrarAlerta(`Usuario ${accion}do exitosamente`, 'success');
+                        cargarUsuarios();
+                        cargarUsuariosDesactivados();
+                    } else {
+                        mostrarAlerta(data.error || 'Error al actualizar usuario', 'danger');
+                    }
+                })
+                .catch(error => mostrarAlerta('Error: ' + error.message, 'danger'));
+            }
+        }
+        
+        function habilitarUsuario(id, nombre) {
+            if (confirm(`¿Deseas habilitar a ${nombre}?`)) {
+                fetch(`/gestion-usuarios/api/usuarios/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        mostrarAlerta('Usuario habilitado exitosamente', 'success');
+                        cargarUsuarios();
+                        cargarUsuariosDesactivados();
+                    } else {
+                        mostrarAlerta(data.error || 'Error al habilitar usuario', 'danger');
+                    }
+                })
+                .catch(error => mostrarAlerta('Error: ' + error.message, 'danger'));
+            }
+        }
+        
+        function eliminarUsuarioPermanente(id, nombre) {
+            if (confirm(`¿Estás seguro de que deseas ELIMINAR PERMANENTEMENTE a ${nombre}? Esta acción no se puede deshacer.`)) {
+                if (confirm('Esta es una acción irreversible. ¿Confirmas la eliminación?')) {
+                    fetch(`/gestion-usuarios/api/usuarios/${id}/eliminar-permanentemente`, {
+                        method: 'POST'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            mostrarAlerta('Usuario eliminado permanentemente', 'success');
+                            cargarUsuarios();
+                            cargarUsuariosDesactivados();
+                        } else {
+                            mostrarAlerta(data.error || 'Error al eliminar usuario', 'danger');
+                        }
+                    })
+                    .catch(error => mostrarAlerta('Error: ' + error.message, 'danger'));
+                }
+            }
+        }
+        
+        function mostrarAlerta(mensaje, tipo) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${tipo} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                <i class="fas fa-${tipo === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+                ${mensaje}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.getElementById('alertContainer').innerHTML = '';
+            document.getElementById('alertContainer').appendChild(alertDiv);
+            
+            setTimeout(() => {
+                if (alertDiv.parentElement) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

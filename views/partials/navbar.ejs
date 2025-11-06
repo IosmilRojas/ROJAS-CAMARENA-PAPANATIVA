@@ -1,0 +1,361 @@
+<!-- Navbar Component -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm">
+    <div class="container-fluid">
+        <!-- Brand -->
+        <a class="navbar-brand d-flex align-items-center" href="/">
+            <img src="/assets/images/logo.jpg" alt="PapaIA Logo" style="height: 45px; width: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+        </a>
+        
+        <!-- Mobile toggle -->
+        <button class="navbar-toggler" 
+                type="button" 
+                data-bs-toggle="collapse" 
+                data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <!-- Navigation items -->
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link <%= typeof titulo !== 'undefined' && titulo.includes('Dashboard') ? 'active' : '' %>" 
+                       href="/dashboard">
+                        <i class="fas fa-tachometer-alt me-1"></i>
+                        Dashboard
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link <%= typeof titulo !== 'undefined' && titulo.includes('Clasificar') ? 'active' : '' %>" 
+                       href="/clasificacion">
+                        <i class="fas fa-camera me-1"></i>
+                        Clasificar
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link <%= typeof titulo !== 'undefined' && titulo.includes('Historial') ? 'active' : '' %>" 
+                       href="/historial">
+                        <i class="fas fa-history me-1"></i>
+                        Historial
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link <%= typeof titulo !== 'undefined' && titulo.includes('Reportes') ? 'active' : '' %>" 
+                       href="/reportes">
+                        <i class="fas fa-chart-bar me-1"></i>
+                        Reportes
+                    </a>
+                </li>
+                
+                <% if (typeof usuario !== 'undefined' && usuario.rol === 'administrador') { %>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" 
+                       href="#" 
+                       role="button" 
+                       data-bs-toggle="dropdown">
+                        <i class="fas fa-cog me-1"></i>
+                        Administración
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item" href="/gestion-usuarios">
+                                <i class="fas fa-users me-2"></i>
+                                Gestión de Usuarios
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="/clasificacion/modelo/estado">
+                                <i class="fas fa-brain me-2"></i>
+                                Estado del Modelo IA
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="/reportes/api/estadisticas" target="_blank">
+                                <i class="fas fa-download me-2"></i>
+                                Exportar Estadísticas
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <% } %>
+            </ul>
+            
+            <!-- User menu -->
+            <ul class="navbar-nav">
+                <li class="nav-item dropdown ms-1">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center gap-1 px-1 py-2" 
+                       href="#" 
+                       role="button" 
+                       data-bs-toggle="dropdown"
+                       style="border-radius: 20px;">
+                        <div class="user-avatar">
+                            <% if (typeof usuario !== 'undefined' && usuario.avatarUrl) { %>
+                                <img src="<%= usuario.avatarUrl %>" alt="Avatar" class="user-avatar-img">
+                            <% } else if (typeof usuario !== 'undefined') { %>
+                                <i class="fas fa-user-circle" style="font-size: 0.8rem;"></i>
+                            <% } else { %>
+                                <i class="fas fa-user-circle" style="font-size: 0.8rem;"></i>
+                            <% } %>
+                        </div>
+                        <span class="d-none d-md-block" style="font-size: 0.85rem; white-space: nowrap;">
+                            <% if (typeof usuario !== 'undefined') { %>
+                                <%= usuario.nombre %>
+                            <% } else { %>
+                                Usuario
+                            <% } %>
+                        </span>
+                    </a>
+                    
+                    <ul class="dropdown-menu dropdown-menu-end user-dropdown">
+                        <!-- User Info Header -->
+                        <li>
+                            <div class="dropdown-header py-2 px-3" style="background: linear-gradient(135deg, #28a745, #20c997); border-radius: 8px 8px 0 0; margin: 0;">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="user-dropdown-avatar" style="width:45px;height:45px;border-radius:50%;background:linear-gradient(135deg, #28a745, #20c997);overflow:hidden;padding:2px;flex-shrink:0;">
+                                        <% if (typeof usuario !== 'undefined' && usuario.avatarUrl) { %>
+                                            <img src="<%= usuario.avatarUrl %>" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;border:2px solid white;">
+                                        <% } else if (typeof usuario !== 'undefined') { %>
+                                            <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:1.1rem;border-radius:50%;border:2px solid white;"><%= usuario.nombre.charAt(0).toUpperCase() %></div>
+                                        <% } %>
+                                    </div>
+                                    <div style="min-width: 0; flex: 1;">
+                                        <% if (typeof usuario !== 'undefined') { %>
+                                            <h6 class="mb-0 fw-bold text-white" style="font-size: 0.9rem;"><%= usuario.nombre %></h6>
+                                            <small class="text-white opacity-85 d-block" style="font-size: 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><%= usuario.correo %></small>
+                                            <span class="badge bg-light text-success mt-1" style="font-size: 0.65rem;">
+                                                <%= usuario.rol.charAt(0).toUpperCase() + usuario.rol.slice(1) %>
+                                            </span>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li><hr class="dropdown-divider m-0"></li>
+                        
+                        <!-- Menu Items -->
+                        <li>
+                            <a class="dropdown-item py-2 px-3" href="/perfil">
+                                <i class="fas fa-user-circle me-2 text-success" style="font-size: 1rem;"></i>
+                                <span class="fw-500" style="font-size: 0.9rem;">Mi Perfil</span>
+                                <small class="d-block text-muted ms-4" style="font-size: 0.75rem;">Editar mis datos</small>
+                            </a>
+                        </li>
+                        
+                        <li>
+                            <a class="dropdown-item py-2 px-3" href="/historial">
+                                <i class="fas fa-history me-2 text-primary" style="font-size: 1rem;"></i>
+                                <span class="fw-500" style="font-size: 0.9rem;">Mis Clasificaciones</span>
+                                <small class="d-block text-muted ms-4" style="font-size: 0.75rem;">Ver historial</small>
+                            </a>
+                        </li>
+                        
+                        <li><hr class="dropdown-divider m-0"></li>
+                        
+                        <li>
+                            <a class="dropdown-item py-2 px-3 text-danger" href="/logout">
+                                <i class="fas fa-sign-out-alt me-2" style="font-size: 1rem;"></i>
+                                <span class="fw-500" style="font-size: 0.9rem;">Cerrar Sesión</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Breadcrumb (optional) -->
+<% if (typeof titulo !== 'undefined' && !titulo.includes('Dashboard')) { %>
+<nav aria-label="breadcrumb" class="bg-light border-bottom">
+    <div class="container-fluid">
+        <ol class="breadcrumb py-2 mb-0">
+            <li class="breadcrumb-item">
+                <a href="/dashboard" class="text-decoration-none">
+                    <i class="fas fa-home me-1"></i>
+                    Inicio
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <% if (titulo.includes('Clasificar')) { %>
+                    <i class="fas fa-camera me-1"></i>
+                    Clasificación
+                <% } else if (titulo.includes('Reportes')) { %>
+                    <i class="fas fa-chart-bar me-1"></i>
+                    Reportes
+                <% } else { %>
+                    <i class="fas fa-page me-1"></i>
+                    <%= titulo.split(' - ')[0] %>
+                <% } %>
+            </li>
+        </ol>
+    </div>
+</nav>
+<% } %>
+
+<script>
+// Función para cerrar sesión
+function cerrarSesion() {
+    if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+        // Enviar POST request para cerrar sesión
+        fetch('/logout', {
+            method: 'POST'
+        }).then(() => {
+            window.location.href = '/login';
+        }).catch(() => {
+            // Fallback si falla el POST
+            window.location.href = '/logout';
+        });
+    }
+}
+
+// Función para ver perfil (placeholder)
+function verPerfil() {
+    // Esta función se puede expandir para mostrar un modal de perfil
+    alert('Funcionalidad de perfil en desarrollo');
+}
+
+// Resaltar navegación activa basada en URL actual
+document.addEventListener('DOMContentLoaded', function() {
+    const currentPath = window.location.pathname;
+    const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+    
+    navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (href && href !== '#' && currentPath.startsWith(href)) {
+            link.classList.add('active');
+        }
+    });
+});
+</script>
+
+<style>
+.navbar-brand {
+    font-weight: 600;
+}
+
+.user-avatar {
+    color: rgba(255, 255, 255, 0.9);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #28a745, #20c997);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    padding: 2px;
+    overflow: hidden;
+    box-shadow: 0 0 0 2px white, 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.user-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+.nav-link[data-bs-toggle="dropdown"]:hover .user-avatar,
+.nav-link[data-bs-toggle="dropdown"]:focus .user-avatar {
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.5);
+}
+
+.nav-link[data-bs-toggle="dropdown"] {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 0.25rem 0.4rem !important;
+    transition: all 0.3s ease;
+}
+
+.nav-link[data-bs-toggle="dropdown"]:hover {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.nav-link[data-bs-toggle="dropdown"]:active {
+    transform: scale(0.95);
+}
+
+.navbar-nav .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 0.375rem;
+}
+
+.dropdown-menu {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    border: 0;
+    border-radius: 12px;
+    min-width: 300px;
+    animation: dropdownSlideDown 0.3s ease-out;
+}
+
+@keyframes dropdownSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.user-dropdown {
+    overflow: hidden;
+}
+
+.user-dropdown .dropdown-header {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    color: white;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.5rem 0.75rem !important;
+}
+
+.user-dropdown .dropdown-item {
+    color: #2c3e50;
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease;
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.9rem;
+}
+
+.user-dropdown .dropdown-item:hover {
+    background-color: #f8f9fa;
+    border-left-color: #28a745;
+    padding-left: calc(0.75rem + 3px) !important;
+}
+
+.user-dropdown .dropdown-item.text-danger:hover {
+    background-color: #ffe5e5;
+    border-left-color: #dc3545;
+    padding-left: calc(0.75rem + 3px) !important;
+}
+
+.dropdown-divider {
+    margin: 0 !important;
+}
+
+.dropdown-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    margin: -0.5rem -1rem 0;
+    padding: 0.5rem 1rem;
+}
+
+.breadcrumb {
+    background-color: transparent;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "›";
+    color: #6c757d;
+}
+</style>

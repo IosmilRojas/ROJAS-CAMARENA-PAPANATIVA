@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login  <%= titulo || 'PapaIA - Clasificador Inteligente' %></title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/assets/css/login.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥔</text></svg>">
+</head>
+<body class="eco-bg">
+    <!-- Animated Background Elements -->
+    <div class="eco-particles">
+        <div class="particle particle-1">🌱</div>
+        <div class="particle particle-2">🍃</div>
+        <div class="particle particle-3">🌿</div>
+        <div class="particle particle-4">🥔</div>
+        <div class="particle particle-5">🌾</div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row min-vh-100">
+            <!-- Left Panel - Branding -->
+            <div class="col-lg-7 d-none d-lg-flex eco-panel align-items-center justify-content-center">
+                <div class="text-center text-white px-5">
+                    <div class="animate__animated animate__fadeInLeft">
+                        <div class="brand-logo mb-4">
+                            <img src="/assets/images/logo.jpg" alt="PapaIA Logo" style="height: 200px; width: auto; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.3); margin-bottom: 20px;">
+                        </div>
+                        
+                        <div class="features-list">
+                            <div class="feature-item mb-3">
+                                <i class="fas fa-brain fa-2x text-warning me-3"></i>
+                                <span class="h5">Inteligencia Artificial Avanzada</span>
+                            </div>
+                            <div class="feature-item mb-3">
+                                <i class="fas fa-leaf fa-2x text-success me-3"></i>
+                                <span class="h5">Enfoque Ecológico Sostenible</span>
+                            </div>
+                            <div class="feature-item mb-3">
+                                <i class="fas fa-chart-line fa-2x text-info me-3"></i>
+                                <span class="h5">Análisis de Datos Precisos</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-5">
+                            <p class="lead opacity-75">
+                                "Conectando la sabiduría ancestral con la tecnología moderna para un futuro agrícola sostenible"
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Panel - Login Form -->
+            <div class="col-lg-5 d-flex align-items-center justify-content-center bg-white">
+                <div class="login-container w-100 px-4">
+                    <div class="card border-0 shadow-lg animate__animated animate__fadeInRight">
+                        <div class="card-header bg-gradient-eco text-white text-center py-4 border-0">
+                            <div class="header-icon mb-3">
+                                <img src="/assets/images/logo3.jpg" alt="PapaIA" style="height: 150px; width: auto; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                            </div>
+                            <h3 class="mb-1 fw-bold">¡Bienvenido!</h3>
+                            <p class="mb-0 opacity-90">Accede a tu cuenta PapaIA</p>
+                        </div>
+                        
+                        <div class="card-body p-5">
+                            <!-- Tab Navigation -->
+                            <ul class="nav nav-pills nav-justified mb-4" id="authTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active eco-nav-link" id="login-tab" data-bs-toggle="pill" 
+                                            data-bs-target="#login-panel" type="button" role="tab">
+                                        <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link eco-nav-link" id="register-tab" data-bs-toggle="pill" 
+                                            data-bs-target="#register-panel" type="button" role="tab">
+                                        <i class="fas fa-user-plus me-2"></i>Registrarse
+                                    </button>
+                                </li>
+                            </ul>
+                            
+                            <!-- Alert Messages -->
+                            <div id="alertContainer">
+                                <% if (typeof error !== 'undefined' && error) { %>
+                                    <div class="alert alert-danger alert-dismissible fade show animate__animated animate__shakeX" role="alert">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        <%= error %>
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                <% } %>
+                                
+                                <% if (typeof success !== 'undefined' && success) { %>
+                                    <div class="alert alert-success alert-dismissible fade show animate__animated animate__bounceIn" role="alert">
+                                        <i class="fas fa-check-circle me-2"></i>
+                                        <%= success %>
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                <% } %>
+                            </div>
+                            
+                            <div class="tab-content" id="authTabsContent">
+                                <!-- Login Panel -->
+                                <div class="tab-pane fade show active" id="login-panel" role="tabpanel">
+                                    <form method="POST" action="/login" id="loginForm" class="needs-validation" novalidate>
+                                        <div class="mb-4">
+                                            <label for="correo" class="form-label fw-semibold">
+                                                <i class="fas fa-envelope text-success me-2"></i>
+                                                Correo Electrónico
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light border-end-0">
+                                                    <i class="fas fa-at text-muted"></i>
+                                                </span>
+                                                <input type="email" 
+                                                       class="form-control border-start-0 eco-input" 
+                                                       id="correo" 
+                                                       name="correo" 
+                                                       required 
+                                                       placeholder="tu.correo@ejemplo.com"
+                                                       autocomplete="email">
+                                                <div class="invalid-feedback">
+                                                    Por favor ingresa un correo válido.
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-4">
+                                            <label for="contraseña" class="form-label fw-semibold">
+                                                <i class="fas fa-lock text-success me-2"></i>
+                                                Contraseña
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light border-end-0">
+                                                    <i class="fas fa-key text-muted"></i>
+                                                </span>
+                                                <input type="password" 
+                                                       class="form-control border-start-0 border-end-0 eco-input" 
+                                                       id="contraseña" 
+                                                       name="contraseña" 
+                                                       required 
+                                                       placeholder="Ingresa tu contraseña"
+                                                       autocomplete="current-password">
+                                                <button class="btn btn-outline-secondary border-start-0" type="button" id="togglePassword">
+                                                    <i class="fas fa-eye" id="passwordIcon"></i>
+                                                </button>
+                                                <div class="invalid-feedback">
+                                                    La contraseña es obligatoria.
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-4 d-flex justify-content-between align-items-center">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="recordarme" name="recordarme">
+                                                <label class="form-check-label small" for="recordarme">
+                                                    Recordarme
+                                                </label>
+                                            </div>
+                                            <a href="#" class="text-decoration-none small text-success" onclick="showForgotPassword()">
+                                                ¿Olvidaste tu contraseña?
+                                            </a>
+                                        </div>
+                                        
+                                        <div class="d-grid mb-4">
+                                            <button type="submit" class="btn btn-success btn-lg eco-btn" id="loginBtn">
+                                                <i class="fas fa-sign-in-alt me-2"></i>
+                                                <span class="btn-text">Iniciar Sesión</span>
+                                                <div class="spinner-border spinner-border-sm d-none" role="status">
+                                                    <span class="visually-hidden">Cargando...</span>
+                                                </div>
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Demo Users -->
+                                        <div class="demo-users mt-4 p-3 bg-light rounded">
+                                            <h6 class="text-muted mb-2"><i class="fas fa-info-circle me-1"></i> Usuarios de Demostración:</h6>
+                                            <div class="row g-2">
+                                                <div class="col-12">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary w-100" onclick="fillDemo('admin@papaclick.com', 'admin123456')">
+                                                        👨‍💼 Admin: admin@papaclick.com
+                                                    </button>
+                                                </div>
+                                                <div class="col-12">
+                                                    <button type="button" class="btn btn-sm btn-outline-success w-100" onclick="fillDemo('demo@papaclick.com', 'demo123456')">
+                                                        👩‍🌾 Operador: demo@papaclick.com
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                                
+                                <!-- Register Panel -->
+                                <div class="tab-pane fade" id="register-panel" role="tabpanel">
+                                    <form method="POST" action="/registro" id="registerForm" class="needs-validation" novalidate>
+                                        <div class="mb-3">
+                                            <label for="reg_nombre" class="form-label fw-semibold">
+                                                <i class="fas fa-user text-success me-2"></i>
+                                                Nombre
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light border-end-0">
+                                                    <i class="fas fa-id-card text-muted"></i>
+                                                </span>
+                                                <input type="text" 
+                                                       class="form-control border-start-0 eco-input" 
+                                                       id="reg_nombre" 
+                                                       name="nombre" 
+                                                       required 
+                                                       placeholder="Tu nombre"
+                                                       autocomplete="given-name">
+                                                <div class="invalid-feedback">
+                                                    Por favor ingresa tu nombre.
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="reg_apellido" class="form-label fw-semibold">
+                                                <i class="fas fa-user-tag text-success me-2"></i>
+                                                Apellido
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light border-end-0">
+                                                    <i class="fas fa-id-badge text-muted"></i>
+                                                </span>
+                                                <input type="text" 
+                                                       class="form-control border-start-0 eco-input" 
+                                                       id="reg_apellido" 
+                                                       name="apellido" 
+                                                       required 
+                                                       placeholder="Tu apellido"
+                                                       autocomplete="family-name">
+                                                <div class="invalid-feedback">
+                                                    Por favor ingresa tu apellido.
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="reg_correo" class="form-label fw-semibold">
+                                                <i class="fas fa-envelope text-success me-2"></i>
+                                                Correo Electrónico
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light border-end-0">
+                                                    <i class="fas fa-at text-muted"></i>
+                                                </span>
+                                                <input type="email" 
+                                                       class="form-control border-start-0 eco-input" 
+                                                       id="reg_correo" 
+                                                       name="correo" 
+                                                       required 
+                                                       placeholder="tu.correo@ejemplo.com"
+                                                       autocomplete="email">
+                                                <div class="invalid-feedback">
+                                                    Por favor ingresa un correo válido.
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="reg_telefono" class="form-label fw-semibold">
+                                                <i class="fas fa-phone text-success me-2"></i>
+                                                Teléfono (opcional)
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light border-end-0">
+                                                    <i class="fas fa-phone-alt text-muted"></i>
+                                                </span>
+                                                <input type="text" 
+                                                       class="form-control border-start-0 eco-input" 
+                                                       id="reg_telefono" 
+                                                       name="telefono" 
+                                                       placeholder="Ej: 999-123-456"
+                                                       autocomplete="tel">
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="reg_dni" class="form-label fw-semibold">
+                                                <i class="fas fa-id-card text-success me-2"></i>
+                                                DNI / Documento (opcional)
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light border-end-0">
+                                                    <i class="fas fa-id-card-alt text-muted"></i>
+                                                </span>
+                                                <input type="text" 
+                                                       class="form-control border-start-0 eco-input" 
+                                                       id="reg_dni" 
+                                                       name="dni" 
+                                                       placeholder="Documento de identidad">
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="reg_direccion" class="form-label fw-semibold">
+                                                <i class="fas fa-map-marker-alt text-success me-2"></i>
+                                                Dirección (opcional)
+                                            </label>
+                                            <input type="text" 
+                                                   class="form-control eco-input" 
+                                                   id="reg_direccion" 
+                                                   name="direccion" 
+                                                   placeholder="Tu dirección">
+                                        </div>
+
+                                        <!-- Información Adicional -->
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label for="reg_genero" class="form-label fw-semibold">
+                                                    <i class="fas fa-venus-mars text-success me-2"></i>
+                                                    Género (opcional)
+                                                </label>
+                                                <select class="form-select eco-input" id="reg_genero" name="genero">
+                                                    <option value="">Selecciona...</option>
+                                                    <option value="masculino">Masculino</option>
+                                                    <option value="femenino">Femenino</option>
+                                                    <option value="otro">Otro</option>
+                                                    <option value="no-especifica">Prefiero no decir</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="reg_fechaNacimiento" class="form-label fw-semibold">
+                                                    <i class="fas fa-cake-candles text-success me-2"></i>
+                                                    Fecha de Nacimiento (opcional)
+                                                </label>
+                                                <input type="date" class="form-control eco-input" id="reg_fechaNacimiento" name="fechaNacimiento">
+                                            </div>
+                                        </div>
+
+                    
+                                        <div class="row g-3 mt-1">
+                                            <div class="col-md-4">
+                                                <label for="reg_departamento" class="form-label fw-semibold">
+                                                    <i class="fas fa-location-dot text-success me-2"></i>
+                                                    Departamento (opcional)
+                                                </label>
+                                                <input type="text" class="form-control eco-input" id="reg_departamento" name="departamento" placeholder="Ej: Cusco">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label for="reg_provincia" class="form-label fw-semibold">Provincia (opcional)</label>
+                                                <input type="text" class="form-control eco-input" id="reg_provincia" name="provincia" placeholder="Ej: Urubamba">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label for="reg_distrito" class="form-label fw-semibold">Distrito (opcional)</label>
+                                                <input type="text" class="form-control eco-input" id="reg_distrito" name="distrito" placeholder="Ej: Ollantaytambo">
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3 mt-3">
+                                            <label for="reg_avatar" class="form-label fw-semibold">
+                                                <i class="fas fa-image text-success me-2"></i>
+                                                URL de Avatar (opcional)
+                                            </label>
+                                            <input type="url" class="form-control eco-input" id="reg_avatar" name="avatarUrl" placeholder="https://...">
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="reg_contraseña" class="form-label fw-semibold">
+                                                <i class="fas fa-lock text-success me-2"></i>
+                                                Contraseña
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light border-end-0">
+                                                    <i class="fas fa-key text-muted"></i>
+                                                </span>
+                              <input type="password" 
+                                                       class="form-control border-start-0 border-end-0 eco-input" 
+                                                       id="reg_contraseña" 
+                                                       name="contraseña" 
+                                                       required 
+                                  minlength="8"
+                                  placeholder="Mínimo 8 caracteres"
+                                                       autocomplete="new-password">
+                                                <button class="btn btn-outline-secondary border-start-0" type="button" id="toggleRegPassword">
+                                                    <i class="fas fa-eye" id="regPasswordIcon"></i>
+                                                </button>
+                                                <div class="invalid-feedback">
+                                                    La contraseña debe tener al menos 6 caracteres.
+                                                </div>
+                                            </div>
+                                            <div class="form-text">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-info-circle me-1"></i>
+                                                    La contraseña debe tener al menos 8 caracteres.
+                                                </small>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="reg_confirmar" class="form-label fw-semibold">
+                                                <i class="fas fa-check-double text-success me-2"></i>
+                                                Confirmar Contraseña
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light border-end-0">
+                                                    <i class="fas fa-shield-alt text-muted"></i>
+                                                </span>
+                                                <input type="password" 
+                                                       class="form-control border-start-0 eco-input" 
+                                                       id="reg_confirmar" 
+                                                       name="confirmarContraseña" 
+                                                       required 
+                                                       placeholder="Confirma tu contraseña"
+                                                       autocomplete="new-password">
+                                                <div class="invalid-feedback">
+                                                    Las contraseñas no coinciden.
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="aceptarTerminos" name="aceptarTerminos" required>
+                                                <label class="form-check-label small" for="aceptarTerminos">
+                                                    Acepto los <a href="#" class="text-success text-decoration-none">Términos y Condiciones</a> 
+                                                    y la <a href="#" class="text-success text-decoration-none">Política de Privacidad</a>
+                                                </label>
+                                                <div class="invalid-feedback">
+                                                    Debes aceptar los términos y condiciones.
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="d-grid">
+                                            <button type="submit" class="btn btn-success btn-lg eco-btn" id="registerBtn">
+                                                <i class="fas fa-user-plus me-2"></i>
+                                                <span class="btn-text">Crear Cuenta</span>
+                                                <div class="spinner-border spinner-border-sm d-none" role="status">
+                                                    <span class="visually-hidden">Cargando...</span>
+                                                </div>
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            
+                            <!-- Footer -->
+                            <div class="text-center mt-4 pt-3 border-top">
+                                <p class="small text-muted mb-2">
+                                    <i class="fas fa-leaf text-success me-1"></i>
+                                    Desarrollado con tecnología sostenible
+                                </p>
+                                <div class="social-links">
+                                    <a href="#" class="text-muted me-3" title="GitHub">
+                                        <i class="fab fa-github fa-lg"></i>
+                                    </a>
+                                    <a href="#" class="text-muted me-3" title="LinkedIn">
+                                        <i class="fab fa-linkedin fa-lg"></i>
+                                    </a>
+                                    <a href="#" class="text-muted" title="Email">
+                                        <i class="fas fa-envelope fa-lg"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1055">
+        <div id="toastContainer"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Form validation and interactivity
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeForms();
+            setupPasswordToggles();
+            setupDemoButtons();
+        });
+        
+        // Initialize form validation
+        function initializeForms() {
+            const forms = document.querySelectorAll('.needs-validation');
+            
+            forms.forEach(form => {
+                form.addEventListener('submit', function(event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    } else {
+                        handleFormSubmit(form);
+                    }
+                    form.classList.add('was-validated');
+                });
+            });
+            
+            // Password confirmation validation
+            const regConfirmar = document.getElementById('reg_confirmar');
+            const regPassword = document.getElementById('reg_contraseña');
+            
+            if (regConfirmar && regPassword) {
+                regConfirmar.addEventListener('input', function() {
+                    if (regPassword.value !== regConfirmar.value) {
+                        regConfirmar.setCustomValidity('Las contraseñas no coinciden');
+                    } else {
+                        regConfirmar.setCustomValidity('');
+                    }
+                });
+            }
+        }
+        
+        // Setup password toggles
+        function setupPasswordToggles() {
+            const togglePassword = document.getElementById('togglePassword');
+            const passwordInput = document.getElementById('contraseña');
+            const passwordIcon = document.getElementById('passwordIcon');
+            
+            if (togglePassword) {
+                togglePassword.addEventListener('click', function() {
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+                    passwordIcon.classList.toggle('fa-eye');
+                    passwordIcon.classList.toggle('fa-eye-slash');
+                });
+            }
+            
+            const toggleRegPassword = document.getElementById('toggleRegPassword');
+            const regPasswordInput = document.getElementById('reg_contraseña');
+            const regPasswordIcon = document.getElementById('regPasswordIcon');
+            
+            if (toggleRegPassword) {
+                toggleRegPassword.addEventListener('click', function() {
+                    const type = regPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    regPasswordInput.setAttribute('type', type);
+                    regPasswordIcon.classList.toggle('fa-eye');
+                    regPasswordIcon.classList.toggle('fa-eye-slash');
+                });
+            }
+        }
+        
+        // Setup demo buttons
+        function setupDemoButtons() {
+            window.fillDemo = function(email, password) {
+                document.getElementById('correo').value = email;
+                document.getElementById('contraseña').value = password;
+                showToast('Datos de demostración cargados', 'info');
+            };
+        }
+        
+        // Handle form submissions
+        function handleFormSubmit(form) {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const btnText = submitBtn.querySelector('.btn-text');
+            const spinner = submitBtn.querySelector('.spinner-border');
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            btnText.style.display = 'none';
+            spinner.classList.remove('d-none');
+        }
+        
+        // Show toast notifications
+        function showToast(message, type = 'info') {
+            const toastContainer = document.getElementById('toastContainer');
+            const toastId = 'toast_' + Date.now();
+            
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type} border-0`;
+            toast.id = toastId;
+            toast.setAttribute('role', 'alert');
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            const bsToast = new bootstrap.Toast(toast, { delay: 5000 });
+            bsToast.show();
+            
+            toast.addEventListener('hidden.bs.toast', () => {
+                toast.remove();
+            });
+        }
+        
+        // Forgot password functionality
+        function showForgotPassword() {
+            showToast('Funcionalidad de recuperación de contraseña próximamente', 'info');
+        }
+    </script>
+</body>
+</html>
+                        <hr class="my-4">
+                        
+                        <div class="text-center text-muted">
+                            <small>
+                                <i class="fas fa-info-circle me-1"></i>
+                                Sistema desarrollado para la identificación automática de variedades de papa
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer bg-light text-center py-3">
+                        <small class="text-muted">
+                            &copy; 2024 Rojas Camarena - Clasificador de Papas IA
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="/assets/js/login.js"></script>
+    
+    <script>
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const password = document.getElementById('contraseña');
+            const icon = this.querySelector('i');
+            
+            if (password.type === 'password') {
+                password.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                password.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+        
+        // Form validation
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const correo = document.getElementById('correo').value.trim();
+            const contraseña = document.getElementById('contraseña').value;
+            
+            if (!correo || !contraseña) {
+                e.preventDefault();
+                alert('Por favor, complete todos los campos');
+            }
+        });
+    </script>
+</body>
+</html>

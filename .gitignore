@@ -33,3 +33,35 @@ __pycache__/
 
 # 🧪 Archivos de prueba y debug
 test-debug.js
+*debug*
+*temp*
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# 📊 Modelos temporales (mantener web_model/)
+*.h5
+*.pkl
+*.joblib
+
+# 🖼️ Archivos de imagen temporales
+*.png.tmp
+*.jpg.tmp
+*.jpeg.tmp
+
+# 🔧 Configuraciones locales
+config.local.js
+settings.json
+
+# 📱 Cache de navegadores
+.cache/
+dist/
+build/
+
+# 🔄 Archivos de backup
+backup/
+*.backup
+
+# 📦 Archivos de distribución
+dist/

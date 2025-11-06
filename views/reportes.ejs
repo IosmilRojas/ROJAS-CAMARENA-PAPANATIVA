@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= titulo %></title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/assets/css/reportes.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <%- include('partials/navbar') %>
+    
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>
+                        <i class="fas fa-chart-bar text-info me-2"></i>
+                        Reportes y Estadísticas
+                    </h2>
+                    
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-success" onclick="exportarReporte()">
+                            <i class="fas fa-download me-1"></i>
+                            Exportar
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="actualizarDatos()">
+                            <i class="fas fa-sync-alt me-1"></i>
+                            Actualizar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col">
+                                <p class="card-text opacity-75">Total Clasificaciones</p>
+                                <h3 class="card-title mb-0">
+                                    <%= estadisticas.general.totalClasificaciones || 0 %>
+                                </h3>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-images fa-2x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col">
+                                <p class="card-text opacity-75">Confianza Promedio</p>
+                                <h3 class="card-title mb-0">
+                                    <%= Math.round((estadisticas.general.confianzaPromedio || 0) * 100) %>%
+                                </h3>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-brain fa-2x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col">
+                                <p class="card-text opacity-75">Alta Confianza</p>
+                                <h3 class="card-title mb-0">
+                                    <%= estadisticas.distribucionConfianza.alta || 0 %>
+                                </h3>
+                                <small class="opacity-75">≥ 80%</small>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-star fa-2x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col">
+                                <p class="card-text opacity-75">Variedades</p>
+                                <h3 class="card-title mb-0">
+                                    <%= estadisticas.porVariedad.length || 0 %>
+                                </h3>
+                                <small class="opacity-75">Detectadas</small>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-seedling fa-2x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filters -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h6 class="mb-0">
+                            <i class="fas fa-filter me-2"></i>
+                            Filtros de Búsqueda
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <form method="GET" action="/reportes" id="filtrosForm">
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Fecha Inicio</label>
+                                    <input type="date" 
+                                           class="form-control" 
+                                           name="fechaInicio" 
+                                           value="<%= filtros.fechaInicio || '' %>">
+                                </div>
+                                
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Fecha Fin</label>
+                                    <input type="date" 
+                                           class="form-control" 
+                                           name="fechaFin" 
+                                           value="<%= filtros.fechaFin || '' %>">
+                                </div>
+                                
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Variedad</label>
+                                    <select class="form-select" name="variedad">
+                                        <option value="">Todas las variedades</option>
+                                        <% variedades.forEach(function(variedad) { %>
+                                            <option value="<%= variedad._id %>" 
+                                                    <%= filtros.variedad === variedad._id.toString() ? 'selected' : '' %>>
+                                                <%= variedad.nombreComun %>
+                                            </option>
+                                        <% }); %>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Condición</label>
+                                    <select class="form-select" name="condicion">
+                                        <option value="">Todas las condiciones</option>
+                                        <option value="apto" <%= filtros.condicion === 'apto' ? 'selected' : '' %>>Apto</option>
+                                        <option value="no apto" <%= filtros.condicion === 'no apto' ? 'selected' : '' %>>No Apto</option>
+                                    </select>
+                                </div>
+                                
+                                <% if (usuario.rol === 'administrador' && usuarios.length > 0) { %>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Usuario</label>
+                                    <select class="form-select" name="usuario">
+                                        <option value="">Todos los usuarios</option>
+                                        <% usuarios.forEach(function(usr) { %>
+                                            <option value="<%= usr._id %>" 
+                                                    <%= filtros.usuario === usr._id.toString() ? 'selected' : '' %>>
+                                                <%= usr.nombre %>
+                                            </option>
+                                        <% }); %>
+                                    </select>
+                                </div>
+                                <% } %>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary me-2">
+                                        <i class="fas fa-search me-1"></i>
+                                        Buscar
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="limpiarFiltros()">
+                                        <i class="fas fa-times me-1"></i>
+                                        Limpiar
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Classification Results Table -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h6 class="mb-0">
+                            <i class="fas fa-table me-2"></i>
+                            Clasificaciones Realizadas
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="clasificacionesTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Fecha</th>
+                                        <% if (usuario.rol === 'administrador') { %>
+                                        <th>Usuario</th>
+                                        <% } %>
+                                        <th>Imagen</th>
+                                        <th>Variedad Detectada</th>
+                                        <th>Condición</th>
+                                        <th>Confianza</th>
+                                        <th>Estado</th>
+                                        <th>Tiempo (ms)</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% clasificaciones.forEach(function(cls) { %>
+                                    <tr>
+                                        <td>
+                                            <code><%= cls.idClasificacion %></code>
+                                        </td>
+                                        <td>
+                                            <%= moment(cls.fechaClasificacion).format('DD/MM/YYYY HH:mm') %>
+                                        </td>
+                                        <% if (usuario.rol === 'administrador') { %>
+                                        <td>
+                                            <i class="fas fa-user me-1 text-muted"></i>
+                                            <%= cls.idUsuario ? cls.idUsuario.nombre : 'Usuario no encontrado' %>
+                                        </td>
+                                        <% } %>
+                                        <td>
+                                            <% if (cls.idImagen && cls.idImagen.urlImagen) { %>
+                                                <img src="/<%= cls.idImagen.urlImagen %>" 
+                                                     class="img-thumbnail" 
+                                                     style="width: 50px; height: 50px; object-fit: cover;"
+                                                     title="<%= cls.idImagen.nombreOriginal || 'Sin nombre' %>">
+                                            <% } else { %>
+                                                <i class="fas fa-image text-muted"></i>
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <strong><%= cls.idVariedad ? cls.idVariedad.nombreComun : 'Variedad no encontrada' %></strong>
+                                            </div>
+                                            <small class="text-muted">
+                                                <em><%= cls.idVariedad ? cls.idVariedad.nombreCientifico : 'N/A' %></em>
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <% if (cls.condicion === 'apto') { %>
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check-circle"></i> Apto
+                                                </span>
+                                            <% } else { %>
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="fas fa-exclamation-triangle"></i> No Apto
+                                                </span>
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <% 
+                                                let confianzaPorcentaje = Math.round(cls.confianza * 100);
+                                                let badgeClass = confianzaPorcentaje >= 80 ? 'bg-success' : 
+                                                               confianzaPorcentaje >= 50 ? 'bg-warning' : 'bg-danger';
+                                            %>
+                                            <span class="badge <%= badgeClass %>">
+                                                <%= confianzaPorcentaje %>%
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <% 
+                                                let estadoBadge = cls.estado === 'validada' ? 'bg-success' :
+                                                                cls.estado === 'procesada' ? 'bg-info' :
+                                                                cls.estado === 'rechazada' ? 'bg-danger' : 'bg-secondary';
+                                            %>
+                                            <span class="badge <%= estadoBadge %>">
+                                                <%= cls.estado %>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <%= cls.tiempoProcesamientoMs || 'N/A' %>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-info btn-sm" 
+                                                        onclick="verTrazabilidad('<%= cls._id %>')"
+                                                        title="Ver trazabilidad">
+                                                    <i class="fas fa-history"></i>
+                                                </button>
+                                                
+                                                <% if (usuario.rol === 'administrador' && cls.estado !== 'validada') { %>
+                                                <button class="btn btn-outline-success btn-sm" 
+                                                        onclick="validarClasificacion('<%= cls._id %>')"
+                                                        title="Validar">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <% } %>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <% if (clasificaciones.length === 0) { %>
+                        <div class="text-center py-5 text-muted">
+                            <i class="fas fa-inbox fa-3x opacity-25 mb-3"></i>
+                            <p>No se encontraron clasificaciones con los filtros aplicados</p>
+                        </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Trazabilidad Modal -->
+    <div class="modal fade" id="trazabilidadModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-history me-2"></i>
+                        Trazabilidad de Clasificación
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="trazabilidadContent">
+                    <!-- Content will be loaded via AJAX -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- DataTables JS -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // Initialize DataTable
+            $('#clasificacionesTable').DataTable({
+                responsive: true,
+                pageLength: 25,
+                order: [[1, 'desc']], // Order by date descending
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+                }
+            });
+        });
+        
+        function limpiarFiltros() {
+            document.getElementById('filtrosForm').reset();
+            window.location.href = '/reportes';
+        }
+        
+        function actualizarDatos() {
+            location.reload();
+        }
+        
+        async function exportarReporte() {
+            try {
+                // Crear URL con parámetros de filtro
+                const params = new URLSearchParams(window.location.search);
+                params.set('formato', 'json');
+                
+                const url = `/reportes/api/exportar?${params.toString()}`;
+                
+                console.log('Exportando desde URL:', url);
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    const error = await response.text();
+                    console.error('Error en respuesta:', error);
+                    alert(`Error exportando: ${response.status} - ${response.statusText}`);
+                    return;
+                }
+                
+                // Obtener el blob
+                const blob = await response.blob();
+                console.log('Blob recibido:', blob.size, 'bytes');
+                
+                // Crear elemento de descarga
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                
+                // Generar nombre de archivo con timestamp
+                const fecha = new Date();
+                const timestamp = fecha.toISOString().slice(0, 19).replace(/:/g, '-');
+                a.download = `clasificaciones_${timestamp}.json`;
+                
+                // Descargar
+                document.body.appendChild(a);
+                a.click();
+                
+                // Limpiar
+                window.URL.revokeObjectURL(downloadUrl);
+                document.body.removeChild(a);
+                
+                // Mensaje de éxito
+                console.log('✅ Archivo descargado:', a.download);
+                alert('✅ Exportación completada. Archivo descargado.');
+                
+            } catch (error) {
+                console.error('❌ Error exportando reporte:', error);
+                alert('❌ Error: ' + error.message);
+            }
+        }
+        
+        async function verTrazabilidad(idClasificacion) {
+            try {
+                const response = await fetch(`/reportes/api/trazabilidad/${idClasificacion}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    mostrarTrazabilidad(data.trazabilidad);
+                } else {
+                    alert(data.error || 'Error obteniendo trazabilidad');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión');
+            }
+        }
+        
+        function mostrarTrazabilidad(trazabilidad) {
+            let html = '';
+            
+            if (!trazabilidad || trazabilidad.length === 0) {
+                html = '<p class="text-muted text-center py-3">No hay registros de trazabilidad</p>';
+            } else {
+                html = '<div class="timeline">';
+                
+                trazabilidad.forEach(function(registro) {
+                    html += `
+                        <div class="timeline-item">
+                            <div class="timeline-marker">
+                                <i class="fas fa-circle text-primary"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <div class="timeline-header">
+                                    <h6 class="mb-1">${registro.accionDescripcion}</h6>
+                                    <small class="text-muted">
+                                        ${new Date(registro.fechaRegistro).toLocaleString('es-PE')}
+                                    </small>
+                                </div>
+                                <p class="mb-1">${registro.observaciones}</p>
+                                <small class="text-muted">
+                                    Por: ${registro.responsable ? registro.responsable.nombre : 'Sistema'}
+                                </small>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+            }
+            
+            document.getElementById('trazabilidadContent').innerHTML = html;
+            new bootstrap.Modal(document.getElementById('trazabilidadModal')).show();
+        }
+        
+        <% if (usuario.rol === 'administrador') { %>
+        async function validarClasificacion(idClasificacion) {
+            const observaciones = prompt('Observaciones de validación (opcional):');
+            
+            if (observaciones === null) return; // Cancelado
+            
+            try {
+                const response = await fetch(`/clasificacion/${idClasificacion}/validar`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ observaciones })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('Clasificación validada exitosamente');
+                    location.reload();
+                } else {
+                    alert(data.error || 'Error validando clasificación');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión');
+            }
+        }
+        <% } %>
+    </script>
+    
+    <style>
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .timeline-marker {
+            position: absolute;
+            left: -30px;
+            top: 5px;
+        }
+        
+        .timeline-content {
+            padding-left: 15px;
+            border-left: 2px solid #dee2e6;
+            padding-bottom: 10px;
+        }
+        
+        .timeline-item:last-child .timeline-content {
+            border-left: none;
+        }
+    </style>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<% if (typeof usuario !== 'undefined' && usuario) { %>
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius: 20px; padding: 0.25rem 0.4rem !important;">
+        <div class="header-user-avatar">
+            <% if (typeof usuario !== 'undefined' && usuario.avatarUrl) { %>
+                <img src="<%= usuario.avatarUrl %>" alt="Avatar" class="header-user-avatar-img">
+            <% } else if (typeof usuario !== 'undefined') { %>
+                <span class="header-user-avatar-initial"><%= usuario.nombre.charAt(0).toUpperCase() %></span>
+            <% } %>
+        </div>
+        <span class="d-none d-md-block" style="font-size: 0.85rem; white-space: nowrap;">
+            <%= usuario.nombre %>
+        </span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end">
+        <li>
+            <a class="dropdown-item" href="/perfil">
+                <i class="fas fa-user-circle me-2"></i>Mi Perfil
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item" href="/historial">
+                <i class="fas fa-history me-2"></i>Mis Clasificaciones
+            </a>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+            <a class="dropdown-item text-danger" href="/logout">
+                <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+            </a>
+        </li>
+    </ul>
+</li>
+<% } %>
+<!-- ... existing code ... -->
+
+<style>
+.header-user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #28a745, #20c997);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: white;
+    padding: 2px;
+    overflow: hidden;
+    box-shadow: 0 0 0 2px white, 0 2px 8px rgba(40, 167, 69, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+}
+
+.header-user-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+.header-user-avatar-initial {
+    font-weight: bold;
+    font-size: 1rem;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+#userDropdown:hover .header-user-avatar {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 2px white, 0 4px 12px rgba(40, 167, 69, 0.5);
+}
+</style>

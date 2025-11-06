@@ -1,0 +1,338 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil - PapaIA</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/assets/css/perfil.css">
+</head>
+<body>
+    <%- include('partials/navbar') %>
+
+    <div class="profile-container">
+        <div class="profile-card">
+            <!-- Profile Header -->
+            <div class="profile-header">
+                <div class="profile-avatar-container">
+                    <div class="profile-avatar">
+                        <% if (usuario.avatarUrl) { %>
+                            <img id="avatarImg" src="<%= usuario.avatarUrl %>?t=<%= Date.now() %>" alt="Foto de perfil" class="profile-avatar-img">
+                        <% } else { %>
+                            <span class="profile-avatar-initial"><%= usuario.nombre.charAt(0).toUpperCase() %></span>
+                        <% } %>
+                    </div>
+                    <label for="fotoPerfil" class="avatar-edit-btn" title="Cambiar foto">
+                        <i class="fas fa-camera"></i>
+                    </label>
+                    <input type="file" id="fotoPerfil" name="fotoPerfil" accept="image/*" style="display:none;">
+                </div>
+                <h2 class="profile-name"><%= usuario.nombre %> <%= usuario.apellido || '' %></h2>
+                <p class="profile-email"><%= usuario.correo %></p>
+            </div>
+
+            <!-- Profile Body -->
+            <div class="profile-body">
+                <div id="alertContainer"></div>
+
+                <form id="perfilForm" action="/perfil/actualizar" method="POST" enctype="multipart/form-data" class="profile-form">
+                    <!-- Información Personal -->
+                    <div class="section-title">
+                        <i class="fas fa-user-circle"></i> Información Personal
+                    </div>
+                    <div class="info-grid">
+                        <div class="form-group">
+                            <label for="nombre"><i class="fas fa-id-card me-2 text-success"></i>Nombre</label>
+                            <input type="text" id="nombre" name="nombre" class="form-control" value="<%= usuario.nombre %>" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="apellido"><i class="fas fa-id-card me-2 text-success"></i>Apellido</label>
+                            <input type="text" id="apellido" name="apellido" class="form-control" value="<%= usuario.apellido || '' %>">
+                        </div>
+                        <div class="form-group">
+                            <label for="correo"><i class="fas fa-envelope me-2 text-success"></i>Correo Electrónico</label>
+                            <input type="email" id="correo" name="correo" class="form-control" value="<%= usuario.correo %>" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="genero"><i class="fas fa-mars-and-venus me-2 text-success"></i>Género</label>
+                            <select id="genero" name="genero" class="form-control">
+                                <option value="">-- Seleccionar --</option>
+                                <option value="Masculino" <% if(usuario.genero === 'Masculino') { %>selected<% } %>>Masculino</option>
+                                <option value="Femenino" <% if(usuario.genero === 'Femenino') { %>selected<% } %>>Femenino</option>
+                                <option value="Otro" <% if(usuario.genero === 'Otro') { %>selected<% } %>>Otro</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="fechaNacimiento"><i class="fas fa-birthday-cake me-2 text-success"></i>Fecha de Nacimiento</label>
+                            <input type="date" id="fechaNacimiento" name="fechaNacimiento" class="form-control" value="<%= usuario.fechaNacimiento ? usuario.fechaNacimiento.split('T')[0] : '' %>">
+                        </div>
+                    </div>
+
+                    <!-- Información de Contacto -->
+                    <hr class="form-divider">
+                    <div class="section-title">
+                        <i class="fas fa-phone-alt"></i> Información de Contacto
+                    </div>
+                    <div class="info-grid">
+                        <div class="form-group">
+                            <label for="telefono"><i class="fas fa-phone me-2 text-success"></i>Teléfono</label>
+                            <input type="tel" id="telefono" name="telefono" class="form-control" value="<%= usuario.telefono || '' %>">
+                        </div>
+                        <div class="form-group">
+                            <label for="dni"><i class="fas fa-id-badge me-2 text-success"></i>DNI</label>
+                            <input type="text" id="dni" name="dni" class="form-control" value="<%= usuario.dni || '' %>">
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label for="direccion"><i class="fas fa-map-marker-alt me-2 text-success"></i>Dirección</label>
+                            <input type="text" id="direccion" name="direccion" class="form-control" value="<%= usuario.direccion || '' %>">
+                        </div>
+                    </div>
+
+                    <!-- Ubicación -->
+                    <hr class="form-divider">
+                    <div class="section-title">
+                        <i class="fas fa-map-pin"></i> Ubicación
+                    </div>
+                    <div class="info-grid">
+                        <div class="form-group">
+                            <label for="departamento"><i class="fas fa-location-dot me-2 text-success"></i>Departamento</label>
+                            <input type="text" id="departamento" name="departamento" class="form-control" value="<%= usuario.departamento || '' %>">
+                        </div>
+                        <div class="form-group">
+                            <label for="provincia"><i class="fas fa-location-dot me-2 text-success"></i>Provincia</label>
+                            <input type="text" id="provincia" name="provincia" class="form-control" value="<%= usuario.provincia || '' %>">
+                        </div>
+                        <div class="form-group">
+                            <label for="distrito"><i class="fas fa-location-dot me-2 text-success"></i>Distrito</label>
+                            <input type="text" id="distrito" name="distrito" class="form-control" value="<%= usuario.distrito || '' %>">
+                        </div>
+                    </div>
+
+                    <!-- Foto de Perfil -->
+                    <hr class="form-divider">
+                    <div class="section-title">
+                        <i class="fas fa-image"></i> Foto de Perfil
+                    </div>
+                    <div class="photo-upload-section">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                            <label for="fotoPerfil" class="file-input-label" style="background-color: #28a745; cursor: pointer;">
+                                <i class="fas fa-folder-open me-2"></i>Cargar archivo
+                            </label>
+                            <button type="button" id="btnCapturarCamera" class="file-input-label" style="background-color: #17a2b8; cursor: pointer; border: none;">
+                                <i class="fas fa-camera me-2"></i>Capturar con cámara
+                            </button>
+                        </div>
+                        <div id="fileInfo" style="font-size: 0.9rem; color: #666; padding: 0.5rem; display: none;"></div>
+                    </div>
+
+                    <!-- Cambiar Contraseña -->
+                    <hr class="form-divider">
+                    <div class="section-title">
+                        <i class="fas fa-lock"></i> Cambiar Contraseña
+                    </div>
+                    <div class="info-grid">
+                        <div class="form-group">
+                            <label for="contraseñaActual"><i class="fas fa-key me-2 text-success"></i>Contraseña Actual</label>
+                            <input type="password" id="contraseñaActual" name="contraseñaActual" class="form-control" placeholder="Dejar en blanco para no cambiar">
+                        </div>
+                        <div class="form-group">
+                            <label for="contraseñaNuevo"><i class="fas fa-key me-2 text-success"></i>Nueva Contraseña</label>
+                            <input type="password" id="contraseñaNuevo" name="contraseñaNuevo" class="form-control" placeholder="Dejar en blanco para no cambiar">
+                        </div>
+                    </div>
+
+                    <!-- Botón Guardar -->
+                    <button type="submit" class="submit-btn" id="submitBtn">
+                        <i class="fas fa-save me-2"></i>Guardar Cambios
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cámara -->
+    <div id="cameraModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="cameraModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cameraModalLabel">
+                        <i class="fas fa-camera me-2"></i>Capturar Foto
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <video id="videoStream" autoplay playsinline style="width: 100%; border-radius: 8px; background: #000; display: block;"></video>
+                    <canvas id="photoCanvas" style="display: none;"></canvas>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-warning" id="btnCapturar">
+                        <i class="fas fa-camera me-2"></i>Capturar
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let videoStream = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mostrar información del archivo
+            const fotoPerfil = document.getElementById('fotoPerfil');
+            if (fotoPerfil) {
+                fotoPerfil.addEventListener('change', function(e) {
+                    const fileInfo = document.getElementById('fileInfo');
+                    if (this.files && this.files[0]) {
+                        const size = (this.files[0].size / 1024).toFixed(2);
+                        fileInfo.textContent = ' Archivo: ' + this.files[0].name + ' (' + size + ' KB)';
+                        fileInfo.style.display = 'block';
+                    } else {
+                        fileInfo.style.display = 'none';
+                    }
+                });
+            }
+
+            // Abrir cámara
+            const btnCapturarCamera = document.getElementById('btnCapturarCamera');
+            if (btnCapturarCamera) {
+                btnCapturarCamera.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const modalElement = document.getElementById('cameraModal');
+                    const modal = new bootstrap.Modal(modalElement);
+                    const video = document.getElementById('videoStream');
+                    
+                    // Mostrar modal
+                    modal.show();
+                    
+                    // Dar tiempo para que el modal se renderice
+                    setTimeout(() => {
+                        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
+                        .then(stream => {
+                            videoStream = stream;
+                            video.srcObject = stream;
+                        })
+                        .catch(err => {
+                            console.error('Error:', err);
+                            alert('No se pudo acceder a la cámara. Verifica permisos.');
+                            modal.hide();
+                        });
+                    }, 100);
+                });
+            }
+
+            // Capturar foto
+            const btnCapturar = document.getElementById('btnCapturar');
+            if (btnCapturar) {
+                btnCapturar.addEventListener('click', function() {
+                    const video = document.getElementById('videoStream');
+                    const canvas = document.getElementById('photoCanvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    ctx.drawImage(video, 0, 0);
+                    
+                    canvas.toBlob(blob => {
+                        const file = new File([blob], 'foto-' + Date.now() + '.jpg', { type: 'image/jpeg' });
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        document.getElementById('fotoPerfil').files = dataTransfer.files;
+                        
+                        const fileInfo = document.getElementById('fileInfo');
+                        const size = (file.size / 1024).toFixed(2);
+                        fileInfo.textContent = ' Foto capturada: ' + file.name + ' (' + size + ' KB)';
+                        fileInfo.style.display = 'block';
+                        
+                        // Cerrar modal de Bootstrap
+                        const modalElement = document.getElementById('cameraModal');
+                        const modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+                        modal.hide();
+                        
+                        if (videoStream) {
+                            videoStream.getTracks().forEach(track => track.stop());
+                            videoStream = null;
+                        }
+                    }, 'image/jpeg', 0.95);
+                });
+            }
+            // Detener stream cuando se cierra el modal
+            const cameraModal = document.getElementById('cameraModal');
+            if (cameraModal) {
+                cameraModal.addEventListener('hidden.bs.modal', function() {
+                    if (videoStream) {
+                        videoStream.getTracks().forEach(track => track.stop());
+                        videoStream = null;
+                    }
+                });
+            }
+
+            // Enviar formulario
+            const perfilForm = document.getElementById('perfilForm');
+            if (perfilForm) {
+                perfilForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(this);
+                    const fileInput = document.getElementById('fotoPerfil');
+                    
+                    if (fileInput.files && fileInput.files.length > 0) {
+                        formData.append('fotoPerfil', fileInput.files[0]);
+                    }
+                    
+                    try {
+                        const response = await fetch('/perfil/actualizar', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            const alertDiv = document.createElement('div');
+                            alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                            alertDiv.innerHTML = '<i class="fas fa-check-circle me-2"></i>Perfil actualizado correctamente<button type="button" class="btn-close"></button>';
+                            
+                            if (data.usuario && data.usuario.avatarUrl) {
+                                const avatarImg = document.getElementById('avatarImg');
+                                if (avatarImg) {
+                                    avatarImg.src = data.usuario.avatarUrl + '?t=' + Date.now();
+                                }
+                            }
+                            
+                            document.getElementById('alertContainer').innerHTML = '';
+                            document.getElementById('alertContainer').appendChild(alertDiv);
+                            
+                            setTimeout(() => location.reload(), 1500);
+                        } else {
+                            const alertDiv = document.createElement('div');
+                            alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+                            alertDiv.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>' + (data.error || 'Error al actualizar perfil') + '<button type="button" class="btn-close"></button>';
+                            
+                            document.getElementById('alertContainer').innerHTML = '';
+                            document.getElementById('alertContainer').appendChild(alertDiv);
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        const alertDiv = document.createElement('div');
+                        alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+                        alertDiv.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Error de conexión: ' + error.message + '<button type="button" class="btn-close"></button>';
+                        
+                        document.getElementById('alertContainer').innerHTML = '';
+                        document.getElementById('alertContainer').appendChild(alertDiv);
+                    }
+                });
+            }
+        });
+    </script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
