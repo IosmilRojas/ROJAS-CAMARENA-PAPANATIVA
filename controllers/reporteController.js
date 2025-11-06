@@ -368,23 +368,25 @@ class ReporteController {
             // Calcular estadísticas
             const estadisticas = await ReporteController.calcularEstadisticas(filtros);
             
-            // Construir datos del reporte
-            const datosReporte = clasificaciones.map(cls => ({
-                idClasificacion: cls._id,
-                fecha: moment(cls.fechaClasificacion).format('DD/MM/YYYY HH:mm:ss'),
-                usuario: cls.idUsuario.nombre,
-                correoUsuario: cls.idUsuario.correo,
-                variedad: cls.idVariedad.nombreComun,
-                nombreCientifico: cls.idVariedad.nombreCientifico,
-                confianzaNumero: parseFloat((cls.confianza * 100).toFixed(2)),
-                confianza: (cls.confianza * 100).toFixed(2) + '%',
-                estado: cls.estado,
-                condicion: cls.condicion,
-                imagen: cls.idImagen.nombreOriginal,
-                tiempoProcesamiento: cls.tiempoProcesamientoMs,
-                tiempoProcesamintoMs: cls.tiempoProcesamientoMs + 'ms',
-                observaciones: cls.observaciones || 'N/A'
-            }));
+            // Construir datos del reporte con validaciones
+            const datosReporte = clasificaciones
+                .filter(cls => cls.idUsuario && cls.idVariedad && cls.idImagen) // Filtrar registros incompletos
+                .map(cls => ({
+                    idClasificacion: cls._id,
+                    fecha: moment(cls.fechaClasificacion).format('DD/MM/YYYY HH:mm:ss'),
+                    usuario: cls.idUsuario ? cls.idUsuario.nombre : 'Usuario no encontrado',
+                    correoUsuario: cls.idUsuario ? cls.idUsuario.correo : 'N/A',
+                    variedad: cls.idVariedad ? cls.idVariedad.nombreComun : 'Variedad no encontrada',
+                    nombreCientifico: cls.idVariedad ? cls.idVariedad.nombreCientifico : 'N/A',
+                    confianzaNumero: parseFloat((cls.confianza * 100).toFixed(2)),
+                    confianza: (cls.confianza * 100).toFixed(2) + '%',
+                    estado: cls.estado || 'N/A',
+                    condicion: cls.condicion || 'N/A',
+                    imagen: cls.idImagen ? cls.idImagen.nombreOriginal : 'Imagen no encontrada',
+                    tiempoProcesamiento: cls.tiempoProcesamientoMs || 0,
+                    tiempoProcesamintoMs: (cls.tiempoProcesamientoMs || 0) + 'ms',
+                    observaciones: cls.observaciones || 'N/A'
+                }));
             
             const timestamp = moment().format('YYYY-MM-DD_HH-mm-ss');
             
