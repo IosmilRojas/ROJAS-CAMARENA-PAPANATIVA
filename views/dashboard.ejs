@@ -224,121 +224,62 @@
                     </div>
                 </div>
                 
-                <!-- Quick Actions -->
-                <div class="quick-actions animate__animated animate__fadeInUp animate__delay-1s">
-                    <h3 class="mb-0">🚀 Acciones Rápidas</h3>
-                    <p class="text-muted">Herramientas más utilizadas para la clasificación de papa</p>
-                    
-                    <div class="action-grid">
-                        <a href="/clasificacion" class="action-btn">
-                            <div class="action-icon">
-                                <i class="fas fa-camera"></i>
-                            </div>
-                            <div>
-                                <div class="fw-semibold">Nueva Clasificación</div>
-                                <small class="text-muted">Analizar nueva imagen</small>
-                            </div>
-                        </a>
-                        
-                        <a href="/clasificacion/lote" class="action-btn">
-                            <div class="action-icon">
-                                <i class="fas fa-layer-group"></i>
-                            </div>
-                            <div>
-                                <div class="fw-semibold">Análisis por Lotes</div>
-                                <small class="text-muted">Múltiples imágenes</small>
-                            </div>
-                        </a>
-                        
-                        <a href="/reportes" class="action-btn">
-                            <div class="action-icon">
-                                <i class="fas fa-chart-pie"></i>
-                            </div>
-                            <div>
-                                <div class="fw-semibold">Ver Reportes</div>
-                                <small class="text-muted">Estadísticas detalladas</small>
-                            </div>
-                        </a>
-                        
-                        <a href="/exportar" class="action-btn">
-                            <div class="action-icon">
-                                <i class="fas fa-download"></i>
-                            </div>
-                            <div>
-                                <div class="fw-semibold">Exportar Datos</div>
-                                <small class="text-muted">CSV, PDF, Excel</small>
-                            </div>
-                        </a>
-                    </div>
-                </div>
-                
                 <!-- Charts and Recent Activity Row -->
-                <div class="row">
+                <div class="row mt-4">
                     <!-- Chart -->
-                    <div class="col-lg-8">
+                    <div class="col-lg-6">
                         <div class="chart-container animate__animated animate__fadeInLeft animate__delay-2s">
                             <div class="chart-header">
-                                <h4 class="mb-0">📈 Clasificaciones por Variedad (Últimos 7 días)</h4>
-                                <div class="btn-group btn-group-sm">
-                                    <button class="btn btn-outline-success active">7 días</button>
-                                    <button class="btn btn-outline-success">30 días</button>
-                                    <button class="btn btn-outline-success">90 días</button>
-                                </div>
+                                <h5 class="mb-0">📈 Por Variedad (7 días)</h5>
                             </div>
                             <div class="chart-placeholder">
                                 <% if (clasificacionesPorVariedad && clasificacionesPorVariedad.length > 0) { %>
-                                    <div class="row mt-3">
-                                        <% clasificacionesPorVariedad.forEach(function(item) { %>
-                                        <div class="col-md-4 mb-3">
-                                            <div class="text-center">
-                                                <h5><%= item.nombreComun %></h5>
-                                                <h3 class="text-success"><%= item.cantidad %></h3>
-                                                <div class="progress">
-                                                    <div class="progress-bar bg-success" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width: <%= item.porcentaje %>%; ">
-                                                        <%= item.porcentaje.toFixed(1) %>%
-                                                    </div>
+                                    <div class="row mt-2">
+                                        <% clasificacionesPorVariedad.slice(0, 3).forEach(function(item) { %>
+                                        <div class="col-12 mb-2">
+                                            <div>
+                                                <div class="d-flex justify-content-between mb-1">
+                                                    <small><strong><%= item.nombreComun %></strong></small>
+                                                    <small><%= item.cantidad %> (<%= item.porcentaje.toFixed(1) %>%)</small>
+                                                </div>
+                                                <div class="progress" style="height: 8px;">
+                                                    <div class="progress-bar bg-success" style="width: <%= item.porcentaje %>%;"></div>
                                                 </div>
                                             </div>
                                         </div>
                                         <% }); %>
                                     </div>
                                 <% } else { %>
-                                    <div class="text-center">
-                                        <i class="fas fa-chart-area fs-1 mb-3 text-success"></i>
-                                        <p>Sin clasificaciones en los últimos 7 días</p>
-                                    </div>
+                                    <p class="text-muted text-center">Sin datos</p>
                                 <% } %>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Recent Activity -->
-                    <div class="col-lg-4">
+                    <div class="col-lg-6">
                         <div class="recent-activity animate__animated animate__fadeInRight animate__delay-2s">
-                            <h4 class="mb-3">🕒 Actividad Reciente</h4>
+                            <h5 class="mb-3">🕒 Últimas Clasificaciones</h5>
                             
                             <% if (actividadReciente && actividadReciente.length > 0) { %>
-                                <% actividadReciente.forEach(function(item) { %>
-                                <div class="activity-item">
-                                    <div class="activity-icon <%= item.condicion === 'apto' ? 'success' : 'warning' %>">
-                                        <i class="fas fa-<%= item.condicion === 'apto' ? 'check' : 'times' %>"></i>
-                                    </div>
-                                    <div class="activity-content">
-                                        <div class="activity-title">
-                                            <%= item.idVariedad ? item.idVariedad.nombreComun : 'Papa' %> - <%= item.condicion %>
+                                <% actividadReciente.slice(0, 3).forEach(function(item) { %>
+                                <div class="activity-item" style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <small class="d-block"><strong><%= item.idVariedad ? item.idVariedad.nombreComun : 'Papa' %></strong></small>
+                                            <small class="text-muted"><%= item.confianzaFormato %></small>
                                         </div>
-                                        <div class="activity-description">
-                                            Confianza: <%= item.confianzaFormato %> • <%= item.idUsuario ? item.idUsuario.nombre : 'Usuario' %>
-                                        </div>
+                                        <small class="text-muted"><%= item.fechaFormato %></small>
                                     </div>
-                                    <div class="activity-time"><%= item.fechaFormato %></div>
                                 </div>
                                 <% }); %>
-                            <% } else { %>
-                                <div class="text-center text-muted py-4">
-                                    <i class="fas fa-inbox fs-3 mb-2"></i>
-                                    <p>No hay actividad reciente</p>
+                                <div class="text-center mt-3">
+                                    <a href="/historial" class="btn btn-sm btn-outline-success">
+                                        Ver más <i class="fas fa-arrow-right ms-1"></i>
+                                    </a>
                                 </div>
+                            <% } else { %>
+                                <p class="text-muted text-center">Sin actividad</p>
                             <% } %>
                                 <div class="activity-time">Hace 2 horas</div>
                             </div>
@@ -358,48 +299,6 @@
                                 <a href="/historial" class="btn btn-sm btn-outline-success">
                                     Ver todo el historial <i class="fas fa-arrow-right ms-1"></i>
                                 </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Performance Metrics Row -->
-                <div class="row mt-4">
-                    <div class="col-12">
-                        <div class="chart-container animate__animated animate__fadeInUp animate__delay-3s">
-                            <div class="chart-header">
-                                <h4 class="mb-0">🎯 Métricas de Rendimiento del Sistema</h4>
-                                <p class="text-muted mb-0">Estado actual del modelo de IA y procesamiento</p>
-                            </div>
-                            <div class="row mt-4">
-                                <div class="col-md-3 text-center">
-                                    <div class="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 rounded-circle mb-3" style="width: 80px; height: 80px;">
-                                        <i class="fas fa-tachometer-alt fs-2 text-success"></i>
-                                    </div>
-                                    <h5>Velocidad Promedio</h5>
-                                    <p class="text-muted"><%= stats.tiempoPromedio %>s por imagen</p>
-                                </div>
-                                <div class="col-md-3 text-center">
-                                    <div class="d-inline-flex align-items-center justify-content-center bg-info bg-opacity-10 rounded-circle mb-3" style="width: 80px; height: 80px;">
-                                        <i class="fas fa-bullseye fs-2 text-info"></i>
-                                    </div>
-                                    <h5>Confianza Promedio</h5>
-                                    <p class="text-muted"><%= stats.confianzaPromedio %>% de certeza</p>
-                                </div>
-                                <div class="col-md-3 text-center">
-                                    <div class="d-inline-flex align-items-center justify-content-center bg-warning bg-opacity-10 rounded-circle mb-3" style="width: 80px; height: 80px;">
-                                        <i class="fas fa-check-double fs-2 text-warning"></i>
-                                    </div>
-                                    <h5>Papas Aptas</h5>
-                                    <p class="text-muted"><%= stats.aptos %> clasificadas</p>
-                                </div>
-                                <div class="col-md-3 text-center">
-                                    <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 rounded-circle mb-3" style="width: 80px; height: 80px;">
-                                        <i class="fas fa-times-circle fs-2 text-primary"></i>
-                                    </div>
-                                    <h5>Papas No Aptas</h5>
-                                    <p class="text-muted"><%= stats.noAptos %> clasificadas</p>
-                                </div>
                             </div>
                         </div>
                     </div>
