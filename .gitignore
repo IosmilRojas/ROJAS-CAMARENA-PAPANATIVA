@@ -12,6 +12,7 @@ yarn-error.log*
 
 # 📸 Archivos subidos por usuarios
 uploads/*
+public/uploads/
 !uploads/.gitkeep
 
 # 📝 Logs
