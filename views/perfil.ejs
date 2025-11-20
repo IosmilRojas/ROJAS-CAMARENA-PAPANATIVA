@@ -101,15 +101,15 @@
                     <div class="info-grid">
                         <div class="form-group">
                             <label for="departamento"><i class="fas fa-location-dot me-2 text-success"></i>Departamento</label>
-                            <input type="text" id="departamento" name="departamento" class="form-control" value="<%= usuario.departamento || '' %>">
+                            <input type="text" id="departamento" name="departamento" class="form-control" value="<%= usuario.ubicacion?.departamento || usuario.departamento || '' %>">
                         </div>
                         <div class="form-group">
                             <label for="provincia"><i class="fas fa-location-dot me-2 text-success"></i>Provincia</label>
-                            <input type="text" id="provincia" name="provincia" class="form-control" value="<%= usuario.provincia || '' %>">
+                            <input type="text" id="provincia" name="provincia" class="form-control" value="<%= usuario.ubicacion?.provincia || '' %>">
                         </div>
                         <div class="form-group">
                             <label for="distrito"><i class="fas fa-location-dot me-2 text-success"></i>Distrito</label>
-                            <input type="text" id="distrito" name="distrito" class="form-control" value="<%= usuario.distrito || '' %>">
+                            <input type="text" id="distrito" name="distrito" class="form-control" value="<%= usuario.ubicacion?.distrito || '' %>">
                         </div>
                     </div>
 

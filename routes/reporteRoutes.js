@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const ReporteController = require('../controllers/reporteController');
+const AuditoriaController = require('../controllers/auditoriaController');
 const UsuarioController = require('../controllers/usuarioController');
 const AuthController = require('../controllers/authController');
 
@@ -18,8 +19,20 @@ router.get('/api/estadisticas', ReporteController.obtenerEstadisticas);
 // Ruta para exportar reporte
 router.get('/api/exportar', ReporteController.exportarReporte);
 
+// Ruta para exportar registros de auditoría (solo administradores)
+router.get('/api/exportar-auditoria', 
+    AuthController.requireRole(['administrador']),
+    AuditoriaController.exportarAuditoriaPDF
+);
+
 // Ruta para obtener trazabilidad de una clasificación específica
 router.get('/api/trazabilidad/:idClasificacion', ReporteController.obtenerTrazabilidad);
+
+// Ruta para filtrar datos del dashboard (POST)
+router.post('/filtrar', ReporteController.filtrarDashboard);
+
+// Ruta para obtener datos de tendencia temporal con filtros (POST)
+router.post('/api/tendencia-temporal', ReporteController.obtenerTendenciaTemporalFiltrada);
 
 // === RUTAS DE GESTIÓN DE USUARIOS (solo administradores) ===
 

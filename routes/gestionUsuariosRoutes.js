@@ -4,6 +4,9 @@ const router = express.Router();
 const GestionUsuariosController = require('../controllers/gestionUsuariosController');
 const AuthController = require('../controllers/authController');
 
+// Ruta de test SIN autenticación para exportar estadísticas
+router.get('/test/api/exportar-estadisticas', GestionUsuariosController.exportarEstadisticasPDF);
+
 // Middleware de autenticación para todas las rutas
 router.use(AuthController.requireAuth);
 
@@ -22,5 +25,6 @@ router.put('/api/usuarios/:id', GestionUsuariosController.actualizarUsuario);
 router.delete('/api/usuarios/:id', GestionUsuariosController.desactivarUsuario);
 router.post('/api/usuarios/:id/eliminar-permanentemente', GestionUsuariosController.eliminarUsuario);
 router.post('/api/usuarios/:id/cambiar-contraseña', GestionUsuariosController.cambiarContraseña);
+router.get('/api/exportar-estadisticas', GestionUsuariosController.exportarEstadisticasPDF);
 
 module.exports = router;

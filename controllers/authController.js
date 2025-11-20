@@ -76,7 +76,9 @@ class AuthController {
                 telefono: usuario.telefono || null,
                 dni: usuario.dni || null,
                 genero: usuario.genero || 'no-especifica',
-                fechaNacimiento: usuario.fechaNacimiento || null
+                fechaNacimiento: usuario.fechaNacimiento || null,
+                ubicacion: usuario.ubicacion || { departamento: '', provincia: '', distrito: '' },
+                direccion: usuario.direccion || null
             };
             
             console.log(`Usuario autenticado: ${usuario.correo}`);
@@ -157,7 +159,7 @@ class AuthController {
             const hace7Dias = new Date();
             hace7Dias.setDate(hace7Dias.getDate() - 7);
             
-            const clasificacionesPorVariedad = await Clasificacion.aggregate([
+            const clasificacionesAgrupadas = await Clasificacion.aggregate([
                 {
                     $match: {
                         ...filtros,
@@ -169,33 +171,21 @@ class AuthController {
                         _id: '$idVariedad',
                         cantidad: { $sum: 1 }
                     }
-                },
-                {
-                    $lookup: {
-                        from: 'variedadpapas',
-                        localField: '_id',
-                        foreignField: '_id',
-                        as: 'variedad'
-                    }
-                },
-                {
-                    $unwind: '$variedad'
-                },
-                {
-                    $project: {
-                        nombreComun: '$variedad.nombreComun',
-                        cantidad: 1,
-                        porcentaje: {
-                            $cond: [
-                                { $eq: [totalClasificaciones, 0] },
-                                0,
-                                { $multiply: [{ $divide: ['$cantidad', totalClasificaciones] }, 100] }
-                            ]
-                        }
-                    }
-                },
-                { $sort: { cantidad: -1 } }
+                }
             ]);
+            
+            // Obtener todas las variedades activas
+            const todasVariedades = await VariedadPapa.find({ activa: true }).lean();
+            
+            // Mapear todas las variedades y asegurar que se muestren todas
+            const clasificacionesPorVariedad = todasVariedades.map(variedad => {
+                const datosEncontrados = clasificacionesAgrupadas.find(item => item._id?.toString() === variedad._id?.toString());
+                return {
+                    nombreComun: variedad.nombreComun,
+                    cantidad: datosEncontrados ? datosEncontrados.cantidad : 0,
+                    porcentaje: totalClasificaciones > 0 ? (((datosEncontrados ? datosEncontrados.cantidad : 0) / totalClasificaciones) * 100).toFixed(1) : 0
+                };
+            }).sort((a, b) => b.cantidad - a.cantidad);
             
             // Actividad reciente (últimas 5 clasificaciones)
             const actividadReciente = await Clasificacion.find(filtros)
@@ -226,6 +216,92 @@ class AuthController {
             const aptos = condiciones.find(c => c._id === 'apto')?.cantidad || 0;
             const noAptos = condiciones.find(c => c._id === 'no apto')?.cantidad || 0;
             
+            // ===== TENDENCIA TEMPORAL (ÚLTIMOS 30 DÍAS, DINÁMICO) =====
+            // Calcular dinámicamente: último día es hoy
+            const hoyTendencia = new Date();
+            hoyTendencia.setHours(0, 0, 0, 0);
+            
+            const hace30DiasTendencia = new Date(hoyTendencia);
+            hace30DiasTendencia.setDate(hace30DiasTendencia.getDate() - 29); // 29 días atrás para tener 30 días totales
+            
+            const tendenciaTemporal = await Clasificacion.aggregate([
+                {
+                    $match: {
+                        ...filtros,
+                        fechaClasificacion: { $gte: hace30DiasTendencia, $lt: new Date(hoyTendencia.getTime() + 86400000) } // Incluir todo hoy
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            $dateToString: {
+                                format: '%Y-%m-%d',
+                                date: '$fechaClasificacion'
+                            }
+                        },
+                        cantidad: { $sum: 1 }
+                    }
+                },
+                { $sort: { _id: 1 } }
+            ]);
+            
+            // Asegurar que haya 30 días en el array, empezando hace 29 días y terminando hoy
+            const datosTemporales = [];
+            let fechaActual = new Date(hace30DiasTendencia);
+            for (let i = 0; i < 30; i++) {
+                const fechaStr = fechaActual.toISOString().split('T')[0];
+                const registro = tendenciaTemporal.find(t => t._id === fechaStr);
+                datosTemporales.push({
+                    fecha: fechaStr,
+                    cantidad: registro ? registro.cantidad : 0
+                });
+                fechaActual.setDate(fechaActual.getDate() + 1);
+            }
+            
+            // ===== DISTRIBUCIÓN DE CONFIANZA =====
+            const datosConfianza = await Clasificacion.aggregate([
+                {
+                    $match: filtros
+                },
+                {
+                    $group: {
+                        _id: null,
+                        rango90_100: {
+                            $sum: { $cond: [{ $gte: ['$confianza', 0.9] }, 1, 0] }
+                        },
+                        rango80_90: {
+                            $sum: { $cond: [
+                                { $and: [{ $gte: ['$confianza', 0.8] }, { $lt: ['$confianza', 0.9] }] },
+                                1, 0
+                            ] }
+                        },
+                        rango70_80: {
+                            $sum: { $cond: [
+                                { $and: [{ $gte: ['$confianza', 0.7] }, { $lt: ['$confianza', 0.8] }] },
+                                1, 0
+                            ] }
+                        },
+                        rango60_70: {
+                            $sum: { $cond: [
+                                { $and: [{ $gte: ['$confianza', 0.6] }, { $lt: ['$confianza', 0.7] }] },
+                                1, 0
+                            ] }
+                        },
+                        rangoMenor60: {
+                            $sum: { $cond: [{ $lt: ['$confianza', 0.6] }, 1, 0] }
+                        }
+                    }
+                }
+            ]);
+            
+            const distribucionConfianza = datosConfianza.length > 0 ? datosConfianza[0] : {
+                rango90_100: 0,
+                rango80_90: 0,
+                rango70_80: 0,
+                rango60_70: 0,
+                rangoMenor60: 0
+            };
+            
             // Comparativa vs mes anterior
             const mesActual = new Date();
             mesActual.setDate(1);
@@ -251,6 +327,9 @@ class AuthController {
                 ? ((clasificacionesMesActual - clasificacionesMesAnterior) / clasificacionesMesAnterior * 100).toFixed(1)
                 : 0;
             
+            // Obtener todas las variedades disponibles en la BD
+            const variedadesDisponibles = await VariedadPapa.find({ activa: true }).lean();
+            
             res.render('dashboard', {
                 titulo: 'Dashboard - Clasificador de Papas',
                 usuario: req.session.usuario,
@@ -266,6 +345,9 @@ class AuthController {
                     variacionMes
                 },
                 clasificacionesPorVariedad,
+                variedadesDisponibles,
+                datosTemporales,
+                distribucionConfianza,
                 actividadReciente: actividadFormateada,
                 momento: moment
             });
@@ -410,10 +492,16 @@ class AuthController {
                 id: nuevoUsuario._id,
                 idUsuario: nuevoUsuario.idUsuario,
                 nombre: nuevoUsuario.nombre,
-                apellido: nuevoUsuario.apellido,
+                apellido: nuevoUsuario.apellido || null,
                 correo: nuevoUsuario.correo,
                 rol: nuevoUsuario.rol,
-                telefono: nuevoUsuario.telefono,
+                avatarUrl: nuevoUsuario.avatarUrl || null,
+                telefono: nuevoUsuario.telefono || null,
+                dni: nuevoUsuario.dni || null,
+                genero: nuevoUsuario.genero || 'no-especifica',
+                fechaNacimiento: nuevoUsuario.fechaNacimiento || null,
+                ubicacion: nuevoUsuario.ubicacion || { departamento: '', provincia: '', distrito: '' },
+                direccion: nuevoUsuario.direccion || null,
                 fechaRegistro: nuevoUsuario.fechaRegistro
             };
             

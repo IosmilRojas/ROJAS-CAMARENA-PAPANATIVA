@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Estado y Entrenamiento - Modelo IA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .card-hero { border-radius: 12px; }
+        .monospace { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Courier New', monospace; }
+    </style>
+</head>
+<body class="bg-light">
+    <%- include('partials/navbar') %>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="mb-3">Estado y Entrenamiento del Modelo IA</h2>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-7">
+                <div class="card card-hero shadow-sm mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Información del Modelo</h5>
+                        <p id="modeloInfo" class="text-muted">Cargando estado del modelo...</p>
+
+                        <pre id="modeloJson" class="monospace bg-white p-3 border rounded" style="max-height:320px;overflow:auto;display:none;"></pre>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Entrenamiento</h5>
+                        <p class="text-muted">Puedes lanzar un entrenamiento simulado para actualizar el modelo web y mejorar la heurística de simulación.</p>
+
+                        <div class="d-flex gap-2">
+                            <button id="btnTrain" class="btn btn-success" onclick="startTraining()">
+                                <i class="fas fa-play me-1"></i> Iniciar Entrenamiento
+                            </button>
+                            <button id="btnRefresh" class="btn btn-outline-secondary" onclick="loadStatus()">
+                                <i class="fas fa-sync-alt me-1"></i> Refrescar Estado
+                            </button>
+                        </div>
+
+                        <div id="trainingLog" class="mt-3" style="min-height:60px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Últimas Acciones</h5>
+                        <p class="text-muted">Registros recientes de auditoría relacionados con el modelo.</p>
+                        <div id="recentAudit" style="max-height:420px;overflow:auto;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadStatus() {
+            const infoEl = document.getElementById('modeloInfo');
+            const jsonEl = document.getElementById('modeloJson');
+            infoEl.textContent = 'Cargando estado...';
+            jsonEl.style.display = 'none';
+            try {
+                const res = await fetch('/clasificacion/modelo/estado');
+                const data = await res.json();
+                infoEl.innerHTML = `<strong>Tipo:</strong> ${data.tipoModelo || data.tipo || 'Desconocido'} <br>` +
+                                   `<strong>Cargado:</strong> ${data.cargado ? 'Sí' : 'No'} <br>` +
+                                   `<strong>Clases:</strong> ${Array.isArray(data.clases) ? data.clases.join(', ') : data.clases}`;
+                jsonEl.textContent = JSON.stringify(data, null, 2);
+                jsonEl.style.display = 'block';
+            } catch (err) {
+                infoEl.textContent = 'Error cargando estado del modelo';
+                console.error(err);
+            }
+            loadRecentAudit();
+        }
+
+        async function startTraining() {
+            const btn = document.getElementById('btnTrain');
+            const log = document.getElementById('trainingLog');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Entrenando...';
+            log.innerHTML = 'Iniciando entrenamiento...';
+            try {
+                const resp = await fetch('/clasificacion/modelo/entrenar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ motivo: 'UI' }) });
+                const body = await resp.json();
+                if (resp.ok && body.success) {
+                    log.innerHTML = `<div class="alert alert-success p-2">Entrenamiento completado: ${body.detalle.version || body.detalle.version}</div>`;
+                } else {
+                    log.innerHTML = `<div class="alert alert-danger p-2">Error: ${body.error || JSON.stringify(body)}</div>`;
+                }
+            } catch (e) {
+                log.innerHTML = `<div class="alert alert-danger p-2">Error conectando al servidor</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-play me-1"></i> Iniciar Entrenamiento';
+                loadStatus();
+            }
+        }
+
+        async function loadRecentAudit() {
+            const el = document.getElementById('recentAudit');
+            el.innerHTML = 'Cargando...';
+            try {
+                // intenta endpoint de auditoría específico si existe
+                const auditRes = await fetch('/servicios/auditoria/ultimos?limit=20');
+                if (auditRes.ok) {
+                    const items = await auditRes.json();
+                    if (Array.isArray(items) && items.length) {
+                        el.innerHTML = items.map(it => `<div class="mb-2"><strong>${new Date(it.fechaAccion).toLocaleString()}</strong><br><small>${it.nombreUsuario} — ${it.tipoAccion}</small><div class="text-muted">${it.descripcion}</div></div>`).join('');
+                        return;
+                    }
+                }
+                el.innerHTML = '<div class="text-muted">No hay registros recientes</div>';
+            } catch (e) {
+                el.innerHTML = '<div class="text-muted">No se pudieron cargar registros</div>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadStatus);
+    </script>
+</body>
+</html>

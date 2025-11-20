@@ -57,7 +57,12 @@ router.post('/:idClasificacion/validar',
 );
 
 // Ruta para obtener estado del modelo IA
+// Vista para estado y entrenamiento del modelo (UI)
+router.get('/modelo', ClasificacionController.mostrarEstadoModeloView);
+// Endpoint que devuelve el estado del modelo en JSON
 router.get('/modelo/estado', ClasificacionController.obtenerEstadoModelo);
+// Ruta para entrenar el modelo IA (solo administradores)
+router.post('/modelo/entrenar', AuthController.requireRole(['administrador']), ClasificacionController.entrenarModelo);
 
 // Manejo de errores de multer
 router.use((error, req, res, next) => {

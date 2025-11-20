@@ -178,14 +178,16 @@ router.post('/actualizar', isAuthenticated, upload.single('fotoPerfil'), async (
             id: usuarioActualizado._id,
             idUsuario: usuarioActualizado.idUsuario,
             nombre: usuarioActualizado.nombre,
-            apellido: usuarioActualizado.apellido,
+            apellido: usuarioActualizado.apellido || null,
             correo: usuarioActualizado.correo,
             rol: usuarioActualizado.rol,
             avatarUrl: usuarioActualizado.avatarUrl || null,
-            telefono: usuarioActualizado.telefono,
-            dni: usuarioActualizado.dni,
+            telefono: usuarioActualizado.telefono || null,
+            dni: usuarioActualizado.dni || null,
             genero: usuarioActualizado.genero,
-            fechaNacimiento: usuarioActualizado.fechaNacimiento
+            fechaNacimiento: usuarioActualizado.fechaNacimiento || null,
+            ubicacion: usuarioActualizado.ubicacion || { departamento: '', provincia: '', distrito: '' },
+            direccion: usuarioActualizado.direccion || null
         };
 
         console.log('✅ Perfil actualizado correctamente para:', usuarioActualizado.nombre);

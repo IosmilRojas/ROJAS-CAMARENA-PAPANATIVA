@@ -93,6 +93,11 @@ app.use('/reportes', reporteRoutes);
 app.use('/historial', historialRoutes);
 app.use('/gestion-usuarios', gestionUsuariosRoutes);
 
+// Ruta de salud para comprobaciones rápidas (sin autenticación)
+app.get('/__health', (req, res) => {
+    res.status(200).send('ok');
+});
+
 // Manejo de errores 404 (debe ir al final)
 app.use((req, res) => {
     res.status(404).render('error', { 

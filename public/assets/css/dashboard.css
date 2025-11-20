@@ -735,3 +735,166 @@ h1, h2, h3, h4, h5, h6 {
         transform: translateY(0);
     }
 }
+
+/* ========================================
+   Filter Panel Styles
+======================================== */
+.filter-panel {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(45, 87, 22, 0.08);
+}
+
+.filter-panel .form-label {
+    color: #2d5016;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.filter-panel .form-control,
+.filter-panel .form-select {
+    border: 1.5px solid #ddd;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.filter-panel .form-control:focus,
+.filter-panel .form-select:focus {
+    border-color: #48bb78;
+    box-shadow: 0 0 0 0.2rem rgba(72, 187, 120, 0.25);
+    background-color: #f8fdf9;
+}
+
+.filter-panel .input-group-text {
+    background: #f0f0f0;
+    border: 1.5px solid #ddd;
+    color: #666;
+    font-weight: 500;
+}
+
+.filter-panel .btn {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+.filter-panel #btnAplicarFiltros {
+    background: linear-gradient(135deg, #28a745, #48bb78);
+    border: none;
+    color: white;
+}
+
+.filter-panel #btnAplicarFiltros:hover {
+    background: linear-gradient(135deg, #228f3a, #38a169);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.filter-panel #btnLimpiarFiltros {
+    border: 1.5px solid #ddd;
+    color: #666;
+}
+
+.filter-panel #btnLimpiarFiltros:hover {
+    background: #f5f5f5;
+    border-color: #aaa;
+}
+
+/* ========================================
+   Chart Container Styles
+======================================== */
+.chart-container {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(45, 87, 22, 0.08);
+    border-left: 4px solid #48bb78;
+    margin-bottom: 2rem;
+    transition: all 0.3s ease;
+}
+
+.chart-container:hover {
+    box-shadow: 0 4px 16px rgba(45, 87, 22, 0.15);
+}
+
+.chart-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.chart-header h4 {
+    color: #2d5016;
+    margin-bottom: 0.25rem;
+    font-size: 1.2rem;
+}
+
+.chart-header p {
+    font-size: 0.85rem;
+    color: #999;
+    margin: 0;
+}
+
+.chart-canvas {
+    position: relative;
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chart-canvas canvas {
+    max-height: 300px;
+}
+
+/* ========================================
+   Chart.js Default Styling
+======================================== */
+.chart-container .chartjs-tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: 6px;
+    pointer-events: none;
+    transform: translate(-50%, 0);
+    transition: all 0.1s ease;
+    z-index: 1000;
+}
+
+/* ========================================
+   Responsive Chart Adjustments
+======================================== */
+@media (max-width: 768px) {
+    .filter-panel {
+        padding: 1rem;
+    }
+    
+    .filter-panel .row {
+        row-gap: 1rem;
+    }
+    
+    .filter-panel .col-md-3,
+    .filter-panel .col-md-2 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    
+    .chart-canvas {
+        height: 250px;
+    }
+    
+    .chart-container {
+        padding: 1rem;
+    }
+    
+    .chart-header h4 {
+        font-size: 1.1rem;
+    }
+}

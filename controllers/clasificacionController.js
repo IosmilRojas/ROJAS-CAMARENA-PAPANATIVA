@@ -310,6 +310,64 @@ class ClasificacionController {
             res.status(500).json({ error: 'Error obteniendo estado del modelo' });
         }
     }
+
+    // Mostrar vista de estado y entrenamiento del modelo (interfaz web)
+    static async mostrarEstadoModeloView(req, res) {
+        try {
+            if (!req.session.usuario) {
+                return res.redirect('/login');
+            }
+
+            const infoModelo = modeloIA.obtenerInfoModelo();
+            res.render('modelo-ia', {
+                titulo: 'Estado y Entrenamiento - Modelo IA',
+                usuario: req.session.usuario,
+                infoModelo
+            });
+        } catch (error) {
+            console.error('Error mostrando vista de estado del modelo:', error);
+            res.status(500).render('error', {
+                mensaje: 'Error mostrando estado del modelo',
+                codigo: 500
+            });
+        }
+    }
+
+    // Entrenar modelo IA (simulado) - solo administradores
+    static async entrenarModelo(req, res) {
+        try {
+            if (!req.session.usuario || req.session.usuario.rol !== 'administrador') {
+                return res.status(403).json({ error: 'Sin permisos suficientes' });
+            }
+
+            const opciones = req.body || {};
+            // Registrar en auditoría que se inició entrenamiento
+            const ServicioAuditoria = require('../services/servicioAuditoria');
+            try {
+                await ServicioAuditoria.registrarAccion(req, 'entrenar_modelo', `Inicio de entrenamiento del modelo IA`, {
+                    datosRelacionados: { opciones }
+                });
+            } catch (e) {
+                console.warn('No se pudo registrar auditoría de inicio de entrenamiento:', e && e.message);
+            }
+
+            const resultado = await modeloIA.entrenarModelo(opciones);
+
+            // Registrar finalización en auditoría
+            try {
+                await ServicioAuditoria.registrarAccion(req, 'entrenar_modelo', `Entrenamiento completado: ${resultado.version}`, {
+                    datosRelacionados: { resultado }
+                });
+            } catch (e) {
+                console.warn('No se pudo registrar auditoría de fin de entrenamiento:', e && e.message);
+            }
+
+            res.json({ success: true, detalle: resultado });
+        } catch (error) {
+            console.error('Error en entrenarModelo:', error);
+            res.status(500).json({ error: 'Error entrenando modelo: ' + error.message });
+        }
+    }
 }
 
 module.exports = ClasificacionController;

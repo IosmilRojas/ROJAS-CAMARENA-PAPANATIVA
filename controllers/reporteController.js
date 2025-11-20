@@ -7,6 +7,38 @@ const moment = require('moment');
 const mongoose = require('mongoose');
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
+const ServicioAuditoria = require('../services/servicioAuditoria');
+
+// Función para agregar watermark (marca de agua) a todas las páginas
+function addWatermarkToDoc(doc) {
+    try {
+        const pageWidth = doc.page.width;
+        const pageHeight = doc.page.height;
+        // Centrado y diagonal, dentro de save/restore para no alterar el estado del doc
+        const text = 'PapaIA';
+        doc.save();
+        doc.fillColor('#E8E8E8');
+        doc.opacity(0.08);
+        doc.font('Helvetica-Bold');
+        doc.fontSize(80);
+
+        const cx = pageWidth / 2;
+        const cy = pageHeight / 2;
+        doc.translate(cx, cy);
+        doc.rotate(-45, { origin: [0, 0] });
+
+        const textWidth = doc.widthOfString(text);
+        doc.text(text, -textWidth / 2, -40, { align: 'center' });
+
+        // Restaurar transformaciones y opacidad
+        doc.rotate(45, { origin: [0, 0] });
+        doc.translate(-cx, -cy);
+        doc.opacity(1);
+        doc.restore();
+    } catch (error) {
+        console.warn('Error añadiendo watermark:', error.message);
+    }
+}
 
 class ReporteController {
     
@@ -83,6 +115,13 @@ class ReporteController {
             
             // Calcular estadísticas básicas
             const estadisticas = await ReporteController.calcularEstadisticas(filtros);
+
+            // Registrar en auditoría que se solicitó/visualizó un reporte
+            try {
+                await ServicioAuditoria.registrarGeneracionReporte(req, 'visualizar_reportes', filtros);
+            } catch (auditErr) {
+                console.warn('Advertencia: no se pudo registrar auditoría de visualización de reporte:', auditErr && auditErr.message);
+            }
             
             res.render('reportes', {
                 titulo: 'Reportes - Sistema de Clasificación',
@@ -390,6 +429,14 @@ class ReporteController {
                 }));
             
             const timestamp = moment().format('YYYY-MM-DD_HH-mm-ss');
+
+            // Registrar en auditoría que se generó un reporte y que se exportará
+            try {
+                await ServicioAuditoria.registrarGeneracionReporte(req, (req.query.formato || 'json'), filtros);
+                await ServicioAuditoria.registrarExportacion(req, (req.query.formato || 'json'), datosReporte.length);
+            } catch (auditErr) {
+                console.warn('Advertencia: no se pudo registrar auditoría de exportación:', auditErr && auditErr.message);
+            }
             
             // Generar según formato
             switch(formato.toLowerCase()) {
@@ -600,13 +647,36 @@ class ReporteController {
             
             doc.pipe(res);
             
-            // ========== ENCABEZADO ==========
-            doc.fontSize(18).font('Helvetica-Bold').text('Reporte de Clasificaciones de Papas', { align: 'center' });
-            doc.moveDown(0.3);
-            doc.fontSize(10).font('Helvetica').text(`Generado: ${moment().format('DD/MM/YYYY HH:mm:ss')}`, { align: 'center' });
-            doc.text(`Usuario: ${usuario.nombre} (${usuario.rol})`, { align: 'center' });
-            doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
-            doc.moveDown(0.5);
+            // Agregar watermark a la primera página
+            addWatermarkToDoc(doc);
+            
+            // ========== ENCABEZADO CON LOGO ==========
+            try {
+                const logoPath = require('path').join(__dirname, '../public/assets/images/logo.jpg');
+                doc.image(logoPath, 50, 30, { width: 80, height: 80 });
+            } catch (error) {
+                console.warn('Logo no encontrado:', error.message);
+            }
+
+            // Posicionar título y datos de forma dinámica para evitar solapamientos
+            const headerX = 250;
+            const headerWidth = 300; // ancho máximo para el bloque de texto del encabezado
+            let currentY = 40;
+
+            doc.fontSize(18).font('Helvetica-Bold');
+            doc.text('Reporte de Clasificaciones de Papas', headerX, currentY, { width: headerWidth, align: 'left' });
+            // avanzar currentY hasta la posición después del texto renderizado
+            currentY = doc.y + 6;
+
+            doc.fontSize(10).font('Helvetica').text(`Generado: ${moment().format('DD/MM/YYYY HH:mm:ss')}`, headerX, currentY, { width: headerWidth, align: 'left' });
+            currentY = doc.y + 2;
+
+            doc.text(`Usuario: ${usuario.nombre} (${usuario.rol})`, headerX, currentY, { width: headerWidth, align: 'left' });
+
+            // Línea separadora; asegurar que esté por debajo del bloque de encabezado
+            const ruleY = Math.max(doc.y + 10, 130);
+            doc.moveTo(50, ruleY).lineTo(545, ruleY).stroke();
+            doc.y = ruleY + 10;
             
             // ========== RESUMEN DE ESTADÍSTICAS ==========
             doc.fontSize(12).font('Helvetica-Bold').text('Resumen de Estadísticas', { underline: true });
@@ -690,6 +760,7 @@ class ReporteController {
                 // Verificar si necesita nueva página
                 if (y > doc.page.height - 80) {
                     doc.addPage();
+                    addWatermarkToDoc(doc);
                     
                     // Repetir encabezado en nueva página
                     const newTableTop = 50;
@@ -808,6 +879,399 @@ class ReporteController {
         } catch (error) {
             console.error('Error obteniendo trazabilidad:', error);
             res.status(500).json({ error: 'Error obteniendo trazabilidad' });
+        }
+    }
+    
+    // ========================================
+    // NUEVO: Obtener tendencia temporal con filtros
+    // ========================================
+    /**
+     * POST /reportes/api/tendencia-temporal
+     * Obtiene la tendencia temporal de los últimos 30 días con filtros aplicados
+     * El último día es siempre hoy
+     */
+    static async obtenerTendenciaTemporalFiltrada(req, res) {
+        try {
+            // Verificar autenticación
+            if (!req.session.usuario) {
+                return res.status(401).json({
+                    exito: false,
+                    error: 'No autenticado'
+                });
+            }
+            
+            const { fechaInicio, fechaFin, variedad, condicion } = req.body;
+            const idUsuario = req.session.usuario._id;
+            const rolUsuario = req.session.usuario.rol;
+            
+            // ===== CONSTRUIR FILTRO DE CONSULTA =====
+            let filtro = {};
+            
+            // Filtro por fecha
+            if (fechaInicio || fechaFin) {
+                filtro.fechaClasificacion = {};
+                if (fechaInicio) {
+                    filtro.fechaClasificacion.$gte = new Date(fechaInicio);
+                }
+                if (fechaFin) {
+                    filtro.fechaClasificacion.$lte = new Date(fechaFin + 'T23:59:59.999Z');
+                }
+            } else {
+                // Si no hay filtros de fecha, usar últimos 30 días dinámicamente
+                const hoyTendencia = new Date();
+                hoyTendencia.setHours(0, 0, 0, 0);
+                
+                const hace30DiasTendencia = new Date(hoyTendencia);
+                hace30DiasTendencia.setDate(hace30DiasTendencia.getDate() - 29);
+                
+                filtro.fechaClasificacion = {
+                    $gte: hace30DiasTendencia,
+                    $lt: new Date(hoyTendencia.getTime() + 86400000)
+                };
+            }
+            
+            // Filtro por variedad
+            if (variedad && variedad !== '') {
+                filtro.idVariedad = new mongoose.Types.ObjectId(variedad);
+            }
+            
+            // Filtro por condición
+            if (condicion && condicion !== '') {
+                filtro.condicion = condicion.toLowerCase();
+            }
+            
+            // ===== CONTROL DE PERMISOS POR ROL =====
+            if (rolUsuario !== 'administrador') {
+                filtro.idUsuario = idUsuario;
+            }
+            
+            // ===== AGRUPAR POR DÍA =====
+            const tendenciaTemporal = await Clasificacion.aggregate([
+                { $match: filtro },
+                {
+                    $group: {
+                        _id: {
+                            $dateToString: {
+                                format: '%Y-%m-%d',
+                                date: '$fechaClasificacion'
+                            }
+                        },
+                        cantidad: { $sum: 1 }
+                    }
+                },
+                { $sort: { _id: 1 } }
+            ]);
+            
+            // Asegurar que haya 30 días en el array
+            const hoyTendencia = new Date();
+            hoyTendencia.setHours(0, 0, 0, 0);
+            
+            const hace30DiasTendencia = new Date(hoyTendencia);
+            hace30DiasTendencia.setDate(hace30DiasTendencia.getDate() - 29);
+            
+            const datosTemporales = [];
+            let fechaActual = new Date(hace30DiasTendencia);
+            for (let i = 0; i < 30; i++) {
+                const fechaStr = fechaActual.toISOString().split('T')[0];
+                const registro = tendenciaTemporal.find(t => t._id === fechaStr);
+                datosTemporales.push({
+                    fecha: fechaStr,
+                    cantidad: registro ? registro.cantidad : 0
+                });
+                fechaActual.setDate(fechaActual.getDate() + 1);
+            }
+            
+            // ===== RETORNAR RESPUESTA =====
+            res.json({
+                exito: true,
+                datosTemporales: datosTemporales
+            });
+            
+        } catch (error) {
+            console.error('[Error] Obtener tendencia temporal filtrada:', error.message);
+            res.status(500).json({
+                exito: false,
+                error: error.message
+            });
+        }
+    }
+
+    // NUEVO: Filtrar datos del dashboard
+    // ========================================
+    /**
+     * POST /reportes/filtrar
+     * Obtiene datos filtrados respetando permisos por rol
+     * 
+     * Body:
+     * {
+     *   fechaInicio: "2024-10-01",
+     *   fechaFin: "2024-11-11",
+     *   variedad: "ID_VARIEDAD" o "",
+     *   condicion: "apto", "no apto" o ""
+     * }
+     * 
+     * Admin: Ve todos los datos
+     * Otros roles: Solo ven sus propias clasificaciones
+     */
+    static async filtrarDashboard(req, res) {
+        try {
+            // Verificar autenticación
+            if (!req.session.usuario) {
+                return res.status(401).json({
+                    exito: false,
+                    error: 'No autenticado'
+                });
+            }
+            
+            const { fechaInicio, fechaFin, variedad, condicion } = req.body;
+            const idUsuario = req.session.usuario._id;
+            const rolUsuario = req.session.usuario.rol;
+            
+            console.log('[Filtros] Solicitud de filtrado:', {
+                usuario: req.session.usuario.nombre,
+                rol: rolUsuario,
+                filtros: { fechaInicio, fechaFin, variedad, condicion }
+            });
+            
+            // ===== CONSTRUIR FILTRO DE CONSULTA =====
+            let filtro = {};
+            
+            // Filtro por fecha
+            if (fechaInicio || fechaFin) {
+                filtro.fechaClasificacion = {};
+                if (fechaInicio) {
+                    filtro.fechaClasificacion.$gte = new Date(fechaInicio);
+                }
+                if (fechaFin) {
+                    filtro.fechaClasificacion.$lte = new Date(fechaFin + 'T23:59:59.999Z');
+                }
+            }
+            
+            // Filtro por variedad
+            if (variedad && variedad !== '') {
+                filtro.idVariedad = new mongoose.Types.ObjectId(variedad);
+            }
+            
+            // Filtro por condición
+            if (condicion && condicion !== '') {
+                filtro.condicion = condicion.toLowerCase();
+            }
+            
+            // ===== CONTROL DE PERMISOS POR ROL =====
+            // Solo administrador puede ver datos de otros usuarios
+            if (rolUsuario !== 'administrador') {
+                filtro.idUsuario = idUsuario;
+                console.log('[Filtros] Usuario no-admin filtrado por su ID:', idUsuario);
+            }
+            
+            // ===== OBTENER CLASIFICACIONES FILTRADAS =====
+            const clasificaciones = await Clasificacion.find(filtro)
+                .populate('idVariedad', 'nombreComun')
+                .populate('idUsuario', 'nombre email rol')
+                .sort({ fechaClasificacion: -1 })
+                .lean();
+            
+            console.log('[Filtros] Clasificaciones encontradas:', clasificaciones.length);
+            
+            // ===== CALCULAR ESTADÍSTICAS FILTRADAS =====
+            const estadisticas = await Clasificacion.aggregate([
+                { $match: filtro },
+                {
+                    $group: {
+                        _id: null,
+                        total: { $sum: 1 },
+                        aptos: {
+                            $sum: {
+                                $cond: [{ $eq: ['$condicion', 'apto'] }, 1, 0]
+                            }
+                        },
+                        noAptos: {
+                            $sum: {
+                                $cond: [{ $eq: ['$condicion', 'no apto'] }, 1, 0]
+                            }
+                        },
+                        confianzaPromedio: { $avg: '$confianza' }
+                    }
+                }
+            ]);
+            
+            const stats = estadisticas[0] || {
+                total: 0,
+                aptos: 0,
+                noAptos: 0,
+                confianzaPromedio: 0
+            };
+            
+            console.log('[Filtros] Estadísticas calculadas:', stats);
+            
+            // ===== AGRUPAR POR VARIEDAD =====
+            const porVariedad = await Clasificacion.aggregate([
+                { $match: filtro },
+                {
+                    $group: {
+                        _id: '$idVariedad',
+                        cantidad: { $sum: 1 },
+                        confianzaPromedio: { $avg: '$confianza' }
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'variedadpapas',
+                        localField: '_id',
+                        foreignField: '_id',
+                        as: 'variedad'
+                    }
+                },
+                {
+                    $unwind: {
+                        path: '$variedad',
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $sort: { cantidad: -1 }
+                }
+            ]);
+            
+            // ===== OBTENER TODAS LAS VARIEDADES ACTIVAS =====
+            const todasLasVariedades = await VariedadPapa.find({ activa: true }).lean();
+            
+            // ===== MAPEAR DATOS Y ASEGURAR QUE TODAS LAS VARIEDADES SE MUESTREN =====
+            const datosVariedad = todasLasVariedades.map(variedad => {
+                const datosEncontrados = porVariedad.find(item => item._id?.toString() === variedad._id?.toString());
+                return {
+                    _id: variedad._id,
+                    nombreComun: variedad.nombreComun || 'Sin nombre',
+                    cantidad: datosEncontrados ? datosEncontrados.cantidad : 0,
+                    confianzaPromedio: datosEncontrados ? datosEncontrados.confianzaPromedio : 0,
+                    porcentaje: stats.total > 0 ? ((( datosEncontrados ? datosEncontrados.cantidad : 0) / stats.total) * 100).toFixed(1) : 0
+                };
+            }).sort((a, b) => b.cantidad - a.cantidad);
+            
+            console.log('[Filtros] Datos por variedad:', datosVariedad.length);
+            
+            // ===== AGRUPAR POR CONDICIÓN =====
+            const porCondicion = await Clasificacion.aggregate([
+                { $match: filtro },
+                {
+                    $group: {
+                        _id: '$condicion',
+                        cantidad: { $sum: 1 }
+                    }
+                }
+            ]);
+            
+            // ===== TENDENCIA TEMPORAL (ÚLTIMOS 30 DÍAS, DINÁMICO) =====
+            const hoyTendencia = new Date();
+            hoyTendencia.setHours(0, 0, 0, 0);
+            
+            const hace30DiasTendencia = new Date(hoyTendencia);
+            hace30DiasTendencia.setDate(hace30DiasTendencia.getDate() - 29);
+            
+            const tendenciaTemporal = await Clasificacion.aggregate([
+                {
+                    $match: {
+                        ...filtro,
+                        fechaClasificacion: { $gte: hace30DiasTendencia, $lt: new Date(hoyTendencia.getTime() + 86400000) }
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            $dateToString: {
+                                format: '%Y-%m-%d',
+                                date: '$fechaClasificacion'
+                            }
+                        },
+                        cantidad: { $sum: 1 }
+                    }
+                },
+                { $sort: { _id: 1 } }
+            ]);
+            
+            // Asegurar que haya 30 días en el array
+            const datosTemporales = [];
+            let fechaActual = new Date(hace30DiasTendencia);
+            for (let i = 0; i < 30; i++) {
+                const fechaStr = fechaActual.toISOString().split('T')[0];
+                const registro = tendenciaTemporal.find(t => t._id === fechaStr);
+                datosTemporales.push({
+                    fecha: fechaStr,
+                    cantidad: registro ? registro.cantidad : 0
+                });
+                fechaActual.setDate(fechaActual.getDate() + 1);
+            }
+            
+            // ===== DISTRIBUCIÓN DE CONFIANZA =====
+            const datosConfianza = await Clasificacion.aggregate([
+                { $match: filtro },
+                {
+                    $group: {
+                        _id: null,
+                        rango90_100: {
+                            $sum: { $cond: [{ $gte: ['$confianza', 0.9] }, 1, 0] }
+                        },
+                        rango80_90: {
+                            $sum: { $cond: [
+                                { $and: [{ $gte: ['$confianza', 0.8] }, { $lt: ['$confianza', 0.9] }] },
+                                1, 0
+                            ] }
+                        },
+                        rango70_80: {
+                            $sum: { $cond: [
+                                { $and: [{ $gte: ['$confianza', 0.7] }, { $lt: ['$confianza', 0.8] }] },
+                                1, 0
+                            ] }
+                        },
+                        rango60_70: {
+                            $sum: { $cond: [
+                                { $and: [{ $gte: ['$confianza', 0.6] }, { $lt: ['$confianza', 0.7] }] },
+                                1, 0
+                            ] }
+                        },
+                        rangoMenor60: {
+                            $sum: { $cond: [{ $lt: ['$confianza', 0.6] }, 1, 0] }
+                        }
+                    }
+                }
+            ]);
+            
+            const distribucionConfianza = datosConfianza.length > 0 ? datosConfianza[0] : {
+                rango90_100: 0,
+                rango80_90: 0,
+                rango70_80: 0,
+                rango60_70: 0,
+                rangoMenor60: 0
+            };
+            
+            // ===== RETORNAR RESPUESTA =====
+            res.json({
+                exito: true,
+                clasificaciones: clasificaciones,
+                estadisticas: {
+                    total: stats.total,
+                    aptos: stats.aptos,
+                    noAptos: stats.noAptos,
+                    confianzaPromedio: parseFloat(stats.confianzaPromedio.toFixed(2))
+                },
+                porVariedad: datosVariedad,
+                porCondicion: porCondicion,
+                datosTemporales: datosTemporales,
+                distribucionConfianza: distribucionConfianza,
+                filtrosAplicados: {
+                    fechaInicio,
+                    fechaFin,
+                    variedad,
+                    condicion
+                }
+            });
+            
+        } catch (error) {
+            console.error('[Error] Filtrar dashboard:', error.message);
+            res.status(500).json({
+                exito: false,
+                error: error.message
+            });
         }
     }
 }

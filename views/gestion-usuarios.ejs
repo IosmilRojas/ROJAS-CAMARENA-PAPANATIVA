@@ -157,9 +157,8 @@
                             <label for="rol" class="form-label">Rol de Usuario *</label>
                             <select class="form-select" id="rol" name="rol" required>
                                 <option value="">Seleccionar rol</option>
-                                <option value="operador">Operador (Clasificación)</option>
-                                <option value="revisor">Revisor (Validación)</option>
                                 <option value="administrador">Administrador (Gestión)</option>
+                                <option value="consultor">Consultor (Clasificación)</option>
                             </select>
                         </div>
                         
@@ -335,9 +334,8 @@
                             <div class="col-md-6 mb-3">
                                 <label for="rolEdit" class="form-label">Rol</label>
                                 <select class="form-select" id="rolEdit" name="rol" required>
-                                    <option value="operador">Operador (Clasificación)</option>
-                                    <option value="revisor">Revisor (Validación)</option>
                                     <option value="administrador">Administrador (Gestión)</option>
+                                    <option value="consultor">Consultor (Clasificación)</option>
                                 </select>
                             </div>
                             
@@ -505,7 +503,7 @@
                         <td>
                             <span class="badge bg-info">${usuario.rol}</span>
                         </td>
-                        <td>${usuario.departamento || '-'}</td>
+                        <td>${usuario.ubicacion?.departamento || usuario.departamento || '-'}</td>
                         <td>${estadoBadge}</td>
                         <td><small>${ultimoAcceso}</small></td>
                         <td>
@@ -658,8 +656,8 @@
                         document.getElementById('generoEdit').value = usuario.genero || 'no-especifica';
                         document.getElementById('fechaNacimientoEdit').value = usuario.fechaNacimiento ? usuario.fechaNacimiento.split('T')[0] : '';
                         document.getElementById('direccionEdit').value = usuario.direccion || '';
-                        document.getElementById('rolEdit').value = usuario.rol || 'operador';
-                        document.getElementById('departamentoEdit').value = usuario.departamento || '';
+                        document.getElementById('rolEdit').value = usuario.rol || 'consultor';
+                        document.getElementById('departamentoEdit').value = usuario.ubicacion?.departamento || usuario.departamento || '';
                         document.getElementById('provinciaEdit').value = usuario.ubicacion?.provincia || '';
                         document.getElementById('distritoEdit').value = usuario.ubicacion?.distrito || '';
                         
@@ -692,17 +690,19 @@
                 fechaNacimiento: document.getElementById('fechaNacimientoEdit').value?.trim(),
                 direccion: document.getElementById('direccionEdit').value?.trim(),
                 rol: document.getElementById('rolEdit').value?.trim(),
-                departamento: document.getElementById('departamentoEdit').value?.trim(),
-                provincia: document.getElementById('provinciaEdit').value?.trim(),
-                distrito: document.getElementById('distritoEdit').value?.trim()
+                ubicacion: {
+                    departamento: document.getElementById('departamentoEdit').value?.trim(),
+                    provincia: document.getElementById('provinciaEdit').value?.trim(),
+                    distrito: document.getElementById('distritoEdit').value?.trim()
+                }
             };
             
             console.log('Datos a enviar:', formData);
             console.log('ID Usuario:', id);
             
             // Validar campos requeridos
-            if (!formData.nombre || !formData.correo || !formData.rol || !formData.departamento) {
-                mostrarAlerta('Por favor completa los campos requeridos (Nombre, Correo, Rol, Departamento)', 'warning');
+            if (!formData.nombre || !formData.correo || !formData.rol) {
+                mostrarAlerta('Por favor completa los campos requeridos (Nombre, Correo, Rol)', 'warning');
                 return;
             }
             

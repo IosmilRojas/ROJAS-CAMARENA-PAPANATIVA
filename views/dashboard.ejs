@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= titulo %></title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    
+    <!-- Custom Stylesheets -->
+    <link rel="stylesheet" href="/assets/css/dashboard.css">
+    <link rel="stylesheet" href="/assets/css/dashboard-components.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body data-page="dashboard">
+    <!-- Layout Container -->
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <!-- Brand -->
+            <div class="brand">
+                <div class="d-flex align-items-center justify-content-center py-4">
+                    <a href="/" style="display: flex; align-items: center; justify-content: center; text-decoration: none;">
+                        <img src="/assets/images/logo.jpg" alt="PapaIA Logo" style="height: 80px; width: auto; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.3s ease;" class="logo-link">
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Navigation -->
+            <ul class="nav flex-column py-3">
+                <li class="nav-item">
+                    <a href="/dashboard" class="nav-link active">
+                        <i class="fas fa-home"></i>
+                        Dashboard Principal
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/clasificacion" class="nav-link">
+                        <i class="fas fa-camera"></i>
+                        Clasificar Papa 📷
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/reportes" class="nav-link">
+                        <i class="fas fa-chart-line"></i>
+                        Reportes y Analytics
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/historial" class="nav-link">
+                        <i class="fas fa-history"></i>
+                        Historial de Análisis
+                    </a>
+                </li>
+                
+                <% if (usuario.rol === 'administrador') { %>
+                <li class="nav-item mt-3">
+                    <small class="text-white-50 px-3 text-uppercase fw-bold">Administración</small>
+                </li>
+                <li class="nav-item">
+                    <a href="/gestion-usuarios" class="nav-link">
+                        <i class="fas fa-users-cog"></i>
+                        Gestión de Usuarios
+                    </a>
+                </li>
+                <% } %>
+                
+                <li class="nav-item mt-4">
+                    <a href="/logout" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Cerrar Sesión
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <!-- Header -->
+                <div class="dashboard-header animate__animated animate__fadeIn">
+                    <div class="row align-items-center">
+                        <div class="col-lg-8">
+                            <div class="d-flex align-items-center">
+                                <div class="user-avatar me-3">
+                                    <% if (usuario.avatarUrl) { %>
+                                        <img src="<%= usuario.avatarUrl %>" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                                    <% } else { %>
+                                        <%= usuario.nombre.charAt(0).toUpperCase() %>
+                                    <% } %>
+                                </div>
+                                <div>
+                                    <h2 class="mb-1">¡Bienvenido de vuelta, <%= usuario.nombre %>! 🌱</h2>
+                                    <p class="text-muted mb-0">
+                                        Rol: <span class="badge bg-success"><%= usuario.rol.charAt(0).toUpperCase() + usuario.rol.slice(1) %></span>
+                                        • Acceso: <%= new Date().toLocaleDateString('es-PE') %>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 text-end">
+                            <button type="button" class="btn btn-outline-success me-2" onclick="location.reload()">
+                                <i class="fas fa-sync-alt me-1"></i>
+                                Actualizar
+                            </button>
+                        </div>
+                    </div>  
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="quick-actions animate__animated animate__fadeInUp">
+                    <div class="mb-3">
+                        <h3 class="mb-1"><i class="fas fa-rocket me-2"></i>Acciones Rápidas</h3>
+                        <p class="text-muted mb-3">Herramientas más utilizadas</p>
+                    </div>
+                    <div>
+                        <a href="/clasificacion" class="quick-action-btn" data-action="new-classification">
+                            <i class="fas fa-camera"></i>
+                            Nueva Clasificación
+                        </a>
+                        <a href="/reportes" class="quick-action-btn" data-action="view-reports">
+                            <i class="fas fa-chart-bar"></i>
+                            Ver Reportes
+                        </a>
+                        <a href="/historial" class="quick-action-btn secondary" data-action="view-history">
+                            <i class="fas fa-history"></i>
+                            Mi Historial
+                        </a>
+                        <% if (usuario.rol === 'administrador') { %>
+                        <a href="/gestion-usuarios" class="quick-action-btn secondary" data-action="manage-users">
+                            <i class="fas fa-users-cog"></i>
+                            Gestión de Usuarios
+                        </a>
+                        <% } %>
+                    </div>
+                </div>
+                
+                <!-- Filters Panel -->
+                <div class="filters-panel animate__animated animate__fadeInUp">
+                    <div class="filters-title">
+                        <i class="fas fa-filter"></i>
+                        Filtros de Datos
+                    </div>
+                    <div class="filters-group">
+                        <div class="filter-item">
+                            <label for="fecha-inicio">Fecha Inicio</label>
+                            <input type="date" id="fecha-inicio">
+                        </div>
+                        <div class="filter-item">
+                            <label for="fecha-fin">Fecha Fin</label>
+                            <input type="date" id="fecha-fin">
+                        </div>
+                        <div class="filter-item">
+                            <label for="variedad">Variedad</label>
+                            <select id="variedad">
+                                <option value="">Todas las variedades</option>
+                                <% if (variedadesDisponibles && variedadesDisponibles.length > 0) { %>
+                                    <% variedadesDisponibles.forEach(function(variedad) { %>
+                                    <option value="<%= variedad._id %>"><%= variedad.nombreComun %></option>
+                                    <% }); %>
+                                <% } %>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label for="condicion">Condición</label>
+                            <select id="condicion">
+                                <option value="all">Todas</option>
+                                <option value="Apto">Apto</option>
+                                <option value="No Apto">No Apto</option>
+                            </select>
+                        </div>
+                        <div class="filter-actions">
+                            <button id="btn-apply-filters" class="btn-apply-filters">
+                                <i class="fas fa-check me-2"></i>Aplicar
+                            </button>
+                            <button id="btn-clear-filters" class="btn-clear-filters">
+                                <i class="fas fa-times me-2"></i>Limpiar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- KPI Cards -->
+                <div class="kpi-cards animate__animated animate__fadeInUp">
+                    <div class="kpi-card">
+                        <div class="kpi-card-content">
+                            <div class="kpi-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="kpi-value" id="kpi-total"><%= stats.totalClasificaciones %></div>
+                            <div class="kpi-title">Total Clasificaciones</div>
+                            <div class="kpi-subtitle">Todos los análisis realizados</div>
+                        </div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-card-content">
+                            <div class="kpi-icon">
+                                <i class="fas fa-percent"></i>
+                            </div>
+                            <div class="kpi-value" id="kpi-approval-rate">
+                                <% if (stats.aptos + stats.noAptos > 0) { %>
+                                    <%= ((stats.aptos / (stats.aptos + stats.noAptos)) * 100).toFixed(1) %>%
+                                <% } else { %>
+                                    0%
+                                <% } %>
+                            </div>
+                            <div class="kpi-title">Tasa de Aprobación</div>
+                            <div class="kpi-subtitle">Papas aptas vs total</div>
+                        </div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-card-content">
+                            <div class="kpi-icon">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <div class="kpi-value" id="kpi-avg-confidence"><%= stats.confianzaPromedio %>%</div>
+                            <div class="kpi-title">Confianza Promedio</div>
+                            <div class="kpi-subtitle">Precisión del modelo</div>
+                        </div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-card-content">
+                            <div class="kpi-icon">
+                                <i class="fas fa-tachometer-alt"></i>
+                            </div>
+                            <div class="kpi-value" id="kpi-top-variety">
+                                <% 
+                                    let topVariety = 'N/A';
+                                    if (clasificacionesPorVariedad && clasificacionesPorVariedad.length > 0) {
+                                        topVariety = clasificacionesPorVariedad[0].nombreComun || 'N/A';
+                                    }
+                                %>
+                                <%= topVariety %>
+                            </div>
+                            <div class="kpi-title">Variedad Top</div>
+                            <div class="kpi-subtitle">Más clasificada</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts Grid -->
+                <div class="chart-grid animate__animated animate__fadeInUp">
+                    <!-- Chart 1: Clasificaciones por Variedad -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h4><i class="fas fa-chart-bar me-2"></i>Clasificaciones por Variedad</h4>
+                            <p>Distribución de análisis por cada tipo de papa</p>
+                        </div>
+                        <div class="chart-canvas">
+                            <canvas id="chartVariedadesBarras"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Chart 2: Condiciones (Apto/No Apto) -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h4><i class="fas fa-chart-pie me-2"></i>Distribución por Condición</h4>
+                            <p>Papas aptas vs no aptas</p>
+                        </div>
+                        <div class="chart-canvas">
+                            <canvas id="chartCondiciones"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Chart 3: Tendencia Temporal -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h4><i class="fas fa-chart-line me-2"></i>Tendencia Temporal (30 días)</h4>
+                            <p>Clasificaciones realizadas por día</p>
+                        </div>
+                        <div class="chart-canvas">
+                            <canvas id="chartTendencia"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Chart 4: Distribución de Confianza -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h4><i class="fas fa-chart-bar me-2"></i>Nivel de Confianza</h4>
+                            <p>Distribución por rango de confianza</p>
+                        </div>
+                        <div class="chart-canvas">
+                            <canvas id="chartConfianza"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <footer class="mt-5 text-center text-muted pb-4">
+                    <p>Dashboard PapaIA- Sistema de Clasificación de Papas Nativas</p>
+                </footer>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Scripts -->
+    <script type="module" src="/assets/js/main.js"></script>
+    <script src="/assets/js/dashboard-config.js"></script>
+    <script src="/assets/js/dashboard-charts.js"></script>
+    <script src="/assets/js/dashboard-filters.js"></script>
+    <script src="/assets/js/dashboard-init.js"></script>
+    
+    <!-- Datos del Servidor (Window Objects) -->
+    <script>
+        // DATOS REALES DE BD - Pasados desde el servidor
+        window.datosVariedades = <%- JSON.stringify(clasificacionesPorVariedad || []) %>;
+        window.datosStats = {
+            aptos: <%= stats.aptos || 0 %>,
+            noAptos: <%= stats.noAptos || 0 %>
+        };
+        window.datosTemporales = <%- JSON.stringify(datosTemporales || []) %>;
+        window.distribucionConfianza = <%- JSON.stringify(distribucionConfianza || {}) %>;
+        
+        // Configuración de debugging
+        window.DASHBOARD_DEBUG = false;
+    </script>
+</body>
+</html>

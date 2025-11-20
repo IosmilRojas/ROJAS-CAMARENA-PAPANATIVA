@@ -24,8 +24,9 @@ function resolveExpressModule(mod) {
 }
 
 async function startServerAndWindow() {
-  // require después de ajustar env si es necesario
-  const mod = require('./PMV1/app');
+  // require del app principal (Express) del proyecto
+  // usamos './app' porque la app principal está en app.js en la raíz
+  const mod = require('./app');
   const expressApp = resolveExpressModule(mod);
 
   if (!expressApp) {

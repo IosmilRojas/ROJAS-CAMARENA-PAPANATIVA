@@ -178,6 +178,12 @@
                             <i class="fas fa-brain me-1"></i>
                             Modelo IA: <%= infoModelo.cargado ? 'Disponible' : 'No Disponible' %>
                         </span>
+                        <% if (typeof usuario !== 'undefined' && usuario.rol === 'administrador') { %>
+                        <button id="trainModelBtn" class="btn btn-outline-secondary btn-sm ms-2" onclick="trainModel()">
+                            <i class="fas fa-play me-1"></i>
+                            Entrenar Modelo
+                        </button>
+                        <% } %>
                     </div>
                 </div>
                 
@@ -305,7 +311,7 @@
                                         onclick="classifyImage()"
                                         <%= !infoModelo.cargado ? 'disabled' : '' %>>
                                     <i class="fas fa-brain me-2"></i>
-                                    Clasificar con IA
+                                    Clasificar con PapaIA
                                 </button>
                                 
                                 <% if (!infoModelo.cargado) { %>
@@ -330,16 +336,7 @@
                         </h5>
                     </div>
                     <div class="card-body">
-                        <div id="resultContainer">
-                            <div class="text-center text-muted py-5">
-                                <i class="fas fa-seedling fa-4x opacity-25 mb-3"></i>
-                                <h6 class="text-muted">¿Qué variedad es?</h6>
-                                <p class="mb-0 small">
-                                    Captura o sube una imagen para descubrirlo
-                                </p>
-                            </div>
-                        </div>
-                        
+                        <div id="resultContainer"></div>
                         <!-- Loading State -->
                         <div id="loadingResult" style="display: none;">
                             <div class="loading-overlay">
@@ -631,7 +628,7 @@
                     <i class="fas fa-seedling fa-4x opacity-25 mb-3"></i>
                     <h6 class="text-muted">Lista para clasificar</h6>
                     <p class="mb-0 small">
-                        Presiona el botón "Clasificar con IA"
+                        Presiona el botón "Clasificar con PapaIA"
                     </p>
                 </div>
             `;
@@ -715,7 +712,7 @@
                     confianza: result.resultado.confianza,
                     confianzaPorcentaje: result.resultado.confianzaPorcentaje,
                     condicion: result.resultado.condicion,
-                    metodo: 'Backend IA',
+                    metodo: 'PapaIA',
                     probabilidades: result.resultado.alternativas ? 
                         [
                             { variedad: result.resultado.variedad.nombre, porcentaje: result.resultado.confianzaPorcentaje },
@@ -862,6 +859,49 @@
                 console.error('❌ Error inicializando modelo:', error);
             });
         });
+
+        // Función para entrenar el modelo (invocada por administradores)
+        async function trainModel() {
+            const btn = document.getElementById('trainModelBtn');
+            if (!btn) return;
+            btn.disabled = true;
+            const original = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Entrenando...';
+
+            try {
+                const response = await fetch('/clasificacion/modelo/entrenar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ motivo: 'Mejora de precisión solicitada desde UI' })
+                });
+
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    alert('Entrenamiento completado: ' + (data.detalle.version || data.detalle.version));
+                    // Intentar recargar información del modelo y refrescar estado en UI
+                    try {
+                        const estadoRes = await fetch('/clasificacion/modelo/estado');
+                        const estado = await estadoRes.json();
+                        // Actualizar badge según nuevo estado
+                        const badge = document.querySelector('.model-status .badge');
+                        if (badge) {
+                            badge.textContent = '🧠 Modelo IA: ' + (estado.cargado ? 'Disponible' : 'No Disponible');
+                            badge.className = `badge bg-${estado.cargado ? 'success' : 'danger'} fs-6`;
+                        }
+                    } catch (e) {
+                        console.warn('No se pudo actualizar estado del modelo tras entrenamiento');
+                    }
+                } else {
+                    alert('Error entrenando el modelo: ' + (data.error || 'Error desconocido'));
+                }
+            } catch (error) {
+                console.error('Error en trainModel:', error);
+                alert('Error conectando con el servidor durante el entrenamiento');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = original;
+            }
+        }
     </script>
 </body>
 </html>

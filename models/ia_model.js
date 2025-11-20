@@ -13,6 +13,55 @@ class ModeloIA {
         this.rutaModelo = path.join(__dirname, '../web_model/model.json');
     }
 
+    // Simular entrenamiento y actualización del modelo web (escribiendo metadata)
+    async entrenarModelo(opciones = {}) {
+        try {
+            console.log('🔁 Iniciando entrenamiento simulado del modelo IA...');
+
+            // Simular tiempo de entrenamiento (2-4s)
+            const tiempo = 2000 + Math.floor(Math.random() * 2000);
+            await new Promise(resolve => setTimeout(resolve, tiempo));
+
+            // Actualizar metadatos simulados
+            const nuevaVersion = (this.modeloVersion || 1) + 1;
+            this.modeloVersion = nuevaVersion;
+
+            // Ajustar pequeñas heurísticas de simulación para reflejar mejora
+            // por ejemplo, aumentar ligeramente la confianza base
+            this._mejoraSimulacionFactor = (this._mejoraSimulacionFactor || 0) + 0.03;
+
+            // Escribir metadata en web_model/model.json para el frontend
+            const meta = {
+                version: `v${nuevaVersion}`,
+                entrenadoEn: new Date().toISOString(),
+                mejoras: {
+                    confianzaIncremento: this._mejoraSimulacionFactor
+                },
+                clases: this.clases,
+                inputShape: this.inputShape
+            };
+
+            try {
+                const fs = require('fs').promises;
+                const ruta = this.rutaModelo;
+                await fs.writeFile(ruta, JSON.stringify(meta, null, 2), 'utf8');
+                console.log('✅ Metadata del modelo web actualizada en', ruta);
+            } catch (wfErr) {
+                console.warn('No se pudo actualizar web_model/model.json:', wfErr.message);
+            }
+
+            console.log('✅ Entrenamiento simulado completado');
+            return {
+                success: true,
+                version: `v${nuevaVersion}`,
+                tiempoMs: tiempo
+            };
+        } catch (error) {
+            console.error('Error durante entrenamiento simulado:', error);
+            throw error;
+        }
+    }
+
     // Cargar modelo (modo simulación mejorada para backend)
     async cargarModelo() {
         try {
