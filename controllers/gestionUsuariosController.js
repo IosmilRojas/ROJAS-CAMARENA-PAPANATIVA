@@ -580,10 +580,12 @@ exports.exportarEstadisticasPDF = async (req, res) => {
         doc.fontSize(9).font('Helvetica').fillColor('#666').text('Activos', 45 + boxWidth + gap, boxY + 8, { width: boxWidth - 10 });
         doc.fontSize(20).font('Helvetica-Bold').fillColor('#27AE60').text(usuariosActivos.length.toString(), 45 + boxWidth + gap, boxY + 28, { width: boxWidth - 10, align: 'center' });
         
-        // Caja 3: Inactivos
-        doc.rect(40 + (boxWidth + gap) * 2, boxY, boxWidth, boxHeight).stroke({ color: '#E74C3C', width: 2 });
-        doc.fontSize(9).font('Helvetica').fillColor('#666').text('Desactivados', 45 + (boxWidth + gap) * 2, boxY + 8, { width: boxWidth - 10 });
-        doc.fontSize(20).font('Helvetica-Bold').fillColor('#E74C3C').text(usuariosDesactivados.toString(), 45 + (boxWidth + gap) * 2, boxY + 28, { width: boxWidth - 10, align: 'center' });
+    // Caja 3: Inactivos
+    doc.rect(40 + (boxWidth + gap) * 2, boxY, boxWidth, boxHeight).stroke({ color: '#E74C3C', width: 2 });
+    doc.fontSize(9).font('Helvetica').fillColor('#666').text('Desactivados', 45 + (boxWidth + gap) * 2, boxY + 8, { width: boxWidth - 10 });
+    // Mostrar número de desactivados (usar 0 si no hay ninguno)
+    const desactivadosCount = (typeof totalDesactivados === 'number') ? totalDesactivados : (Array.isArray(usuariosDesactivados) ? usuariosDesactivados.length : 0);
+    doc.fontSize(20).font('Helvetica-Bold').fillColor('#E74C3C').text(desactivadosCount.toString(), 45 + (boxWidth + gap) * 2, boxY + 28, { width: boxWidth - 10, align: 'center' });
         
         // Caja 4: Administradores
         doc.rect(40 + (boxWidth + gap) * 3, boxY, boxWidth, boxHeight).stroke({ color: '#F39C12', width: 2 });
@@ -650,9 +652,12 @@ exports.exportarEstadisticasPDF = async (req, res) => {
         // ========== TABLA DE USUARIOS DESACTIVADOS ==========
         if (usuariosDesactivados.length > 0) {
             doc.moveDown(1);
-            doc.fontSize(12).font('Helvetica-Bold').fillColor('#E74C3C').text('Usuarios Desactivados (' + usuariosDesactivados.length + ')');
+            // Alinear el título centrado sobre la tabla de desactivados
+            const desTitle = 'Usuarios Desactivados (' + usuariosDesactivados.length + ')';
+            // Alinear título a la izquierda, manteniendo leve margen (alineado con la columna "Nombre")
+            doc.fontSize(12).font('Helvetica-Bold').fillColor('#E74C3C').text(desTitle, 45, doc.y, { align: 'left' });
             doc.moveDown(0.5);
-            
+
             const tableTop = doc.y;
             
             // Encabezado

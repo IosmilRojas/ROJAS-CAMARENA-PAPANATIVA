@@ -20,6 +20,8 @@
     <!-- Custom Stylesheets -->
     <link rel="stylesheet" href="/assets/css/dashboard.css">
     <link rel="stylesheet" href="/assets/css/dashboard-components.css">
+    <link rel="icon" type="image/jpeg" href="/assets/images/logo2.jpg">
+    <link rel="shortcut icon" href="/assets/images/logo2.jpg">
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -318,13 +320,14 @@
     <!-- Datos del Servidor (Window Objects) -->
     <script>
         // DATOS REALES DE BD - Pasados desde el servidor
-        window.datosVariedades = <%- JSON.stringify(clasificacionesPorVariedad || []) %>;
+        // Use JSON.parse with a quoted JSON string to avoid editor/linters mis-parsing EJS tags
+        window.datosVariedades = JSON.parse('<%- JSON.stringify(clasificacionesPorVariedad || []).replace(/'/g, "\\'") %>');
         window.datosStats = {
             aptos: <%= stats.aptos || 0 %>,
             noAptos: <%= stats.noAptos || 0 %>
         };
-        window.datosTemporales = <%- JSON.stringify(datosTemporales || []) %>;
-        window.distribucionConfianza = <%- JSON.stringify(distribucionConfianza || {}) %>;
+        window.datosTemporales = JSON.parse('<%- JSON.stringify(datosTemporales || []).replace(/'/g, "\\'") %>');
+        window.distribucionConfianza = JSON.parse('<%- JSON.stringify(distribucionConfianza || {}).replace(/'/g, "\\'") %>');
         
         // Configuración de debugging
         window.DASHBOARD_DEBUG = false;
