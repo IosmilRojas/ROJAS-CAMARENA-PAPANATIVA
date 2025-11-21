@@ -1,7 +1,7 @@
 // Controller para Gestión de Usuarios
 const Usuario = require('../models/Usuario');
 const ServicioAuditoria = require('../services/servicioAuditoria');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const PDFDocument = require('pdfkit');
 const path = require('path');
